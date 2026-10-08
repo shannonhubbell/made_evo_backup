@@ -1,0 +1,117 @@
+---
+import { ImageMarqueePropsSchema } from "../schema/ui";
+import type z from "zod";
+
+export interface ImageMarqueeProps extends z.infer<typeof ImageMarqueePropsSchema> {}
+
+const props = Astro.props as ImageMarqueeProps;
+const {
+  items,
+  title,
+  isTitleVisible = false,
+  respectColorScheme = false,
+  speed = 30,
+  isStatic = false,
+} = props;
+
+// Duplicate the items so the CSS animation can loop seamlessly by translating
+// exactly one set-width (-50%) instead of relying on brittle fixed pixel math.
+// Skip duplication when static - there's no scroll animation to loop, so a
+// second copy would just render every logo twice.
+const loopItems = !items || items.length === 0 ? [] : isStatic ? items : [...items, ...items];
+---
+
+{items && items.length > 0 && (
+  <div class="lg:container mx-auto px-4">
+    {isTitleVisible && title && <h2 class="ui-h3 mb-4">{title}</h2>}
+    <div
+      class:list={[
+        "relative",
+        !isStatic && "overflow-hidden before:pointer-events-none before:absolute before:inset-y-0 before:start-0 before:z-10 before:w-16 md:before:w-24 before:bg-[linear-gradient(to_right,var(--color-background),transparent)] after:pointer-events-none after:absolute after:inset-y-0 after:end-0 after:z-10 after:w-16 md:after:w-24 after:bg-[linear-gradient(to_left,var(--color-background),transparent)]",
+      ]}
+    >
+      <div
+        class:list={[
+          "flex items-center",
+          isStatic ? "flex-wrap justify-start gap-x-8 gap-y-4" : "animate-marquee gap-x-12 md:gap-x-20",
+        ]}
+        style={isStatic ? undefined : `--marquee-duration: ${speed}s;`}
+      >
+        {loopItems.map((item, index) => (
+          item.url ? (
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="h-10 md:h-12 flex shrink-0 justify-center items-center"
+              aria-label={item.title || "Organization"}
+              aria-hidden={index >= items.length ? "true" : undefined}
+              tabindex={index >= items.length ? -1 : undefined}
+            >
+              <img
+                src={item.image}
+                alt={item.title || ""}
+                class:list={["h-full w-auto max-w-36 object-contain", respectColorScheme && "marquee-logo-colorize"]}
+              />
+            </a>
+          ) : (
+            <div
+              class="h-10 md:h-12 flex shrink-0 justify-center items-center"
+              aria-hidden={index >= items.length ? "true" : undefined}
+            >
+              <img
+                src={item.image}
+                alt={item.title || ""}
+                class:list={["h-full w-auto max-w-36 object-contain", respectColorScheme && "marquee-logo-colorize"]}
+              />
+            </div>
+          )
+        ))}
+      </div>
+    </div>
+  </div>
+)}
+
+<style>
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-marquee {
+    width: max-content;
+    animation: marquee var(--marquee-duration, 30s) linear infinite;
+  }
+
+  .animate-marquee:hover {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-marquee {
+      animation: none;
+    }
+  }
+
+  /* Recolor logos to follow the site's dark/light theme (opt-in), matching the
+     monochrome brand-icon treatment used for the Navbar/Footer icons. */
+  .marquee-logo-colorize {
+    filter: brightness(0) saturate(100%);
+  }
+
+  /* :global() on the ancestor: data-theme is set on <html> by ThemeToggle.astro,
+     which is outside this component, so it must not be scoped. */
+  :global([data-theme="dark"]) .marquee-logo-colorize {
+    filter: brightness(0) saturate(100%) invert(1);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .marquee-logo-colorize {
+      filter: brightness(0) saturate(100%) invert(1);
+    }
+  }
+</style>

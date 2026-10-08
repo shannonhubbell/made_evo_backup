@@ -1,0 +1,25 @@
+---
+// Blog index - shows first/featured post
+// Route: /en/blog, /es/blog, etc.
+import Post from "../../../components/data_specific/Post.astro";
+import { isValidLocale, getDefaultLocale, normalizeLocaleCode } from "../../../lib/contentful/locales";
+
+export const prerender = false;
+
+const { locale: localeParam } = Astro.params;
+
+let locale = localeParam || 'en-US';
+if (!locale.includes('-')) {
+  locale = await normalizeLocaleCode(locale);
+}
+
+const isValid = await isValidLocale(locale);
+if (!isValid) {
+  const defaultLocale = await getDefaultLocale();
+  const defaultLocaleShort = defaultLocale.split('-')[0];
+  return Astro.redirect(`/${defaultLocaleShort}/blog`, 302);
+}
+
+Astro.locals.locale = locale;
+---
+<Post />

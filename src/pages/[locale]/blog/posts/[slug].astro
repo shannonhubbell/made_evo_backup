@@ -1,0 +1,73 @@
+---
+import Post from "../../../../components/data_specific/Post.astro";
+import { getPostBySlug, getBlogPostsPaginated, getBlogPostsCount } from "../../../../lib/contentful";
+import { isValidLocale, getDefaultLocale, normalizeLocaleCode } from "../../../../lib/contentful/locales";
+
+// Always server-rendered for on-demand rendering
+export const prerender = false;
+
+const { locale: localeParam, slug } = Astro.params;
+
+// Validate and normalize locale
+let locale = localeParam || 'en-US';
+
+// Normalize short codes (e.g., 'en' -> 'en-US', 'es' -> 'es-US')
+if (!locale.includes('-')) {
+  locale = await normalizeLocaleCode(locale);
+}
+
+// Validate locale exists in Contentful
+const isValid = await isValidLocale(locale);
+if (!isValid) {
+  // Invalid locale, redirect to default locale version
+  const defaultLocale = await getDefaultLocale();
+  const defaultLocaleShort = defaultLocale.split('-')[0];
+  return Astro.redirect(`/${defaultLocaleShort}/blog/posts/${slug}`, 302);
+}
+
+// Fetch navigation data (prev/next posts)
+let prevSlug: string | null = null;
+let nextSlug: string | null = null;
+let prevTitle: string | null = null;
+let nextTitle: string | null = null;
+
+if (slug) {
+  try {
+    // Verify post exists
+    const post = await getPostBySlug(slug, locale);
+    if (!post) {
+      return Astro.redirect('/404', 404);
+    }
+
+    // Fetch all posts to determine prev/next
+    const totalPosts = await getBlogPostsCount();
+    const allPosts = await getBlogPostsPaginated(1, totalPosts);
+    
+    // Find current post index
+    const currentIndex = allPosts.findIndex((p: { slug: string }) => p.slug === slug);
+    
+    // Get previous and next posts
+    const prevPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
+    const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
+    
+    prevSlug = prevPost?.slug || null;
+    nextSlug = nextPost?.slug || null;
+    prevTitle = prevPost?.title || null;
+    nextTitle = nextPost?.title || null;
+  } catch (error) {
+    console.error(`Error fetching post "${slug}":`, error);
+    return Astro.redirect('/404', 404);
+  }
+}
+
+// Store locale in locals for Layout
+Astro.locals.locale = locale;
+
+---
+<Post 
+  slug={slug} 
+  prevSlug={prevSlug}
+  nextSlug={nextSlug}
+  prevTitle={prevTitle}
+  nextTitle={nextTitle}
+/>

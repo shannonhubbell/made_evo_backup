@@ -1,0 +1,148 @@
+---
+
+import NavBar from "../components/Navbar.astro";
+import PreviewBanner from "../components/PreviewBanner.astro";
+import Alert from "../components/Alert.astro";
+import LanguageSwitcher from "../components/LanguageSwitcher.astro";
+import "../styles/global.css";
+
+import navigationMenuItemsData from "../testContent/navigationMenuItems.json";
+import {
+	validateMenuItems
+} from "../schema/ui";
+import { prependBase } from "../lib/helpers";
+
+// Navigation menu data
+const navigationMenuItems = validateMenuItems(navigationMenuItemsData);
+
+// Footer data
+
+import Footer from "../components/Footer.astro";
+import type { Tracing } from "trace_events";
+
+export interface Props {
+	/** Page-specific title. Rendered as "{title} | {SITE_NAME}" in <title>, and as-is for og:title/twitter:title. Falls back to the generic site title when omitted. */
+	title?: string;
+	sharingTitle?: string;
+	sharingImage?: string;
+	/** Page-specific description. Used for <meta name="description"> and Open Graph/Twitter description. Falls back to the generic site description when omitted. */
+	description?: string;
+	/** Absolute URL to a social-share image (og:image / twitter:image). Omitted entirely when not provided. */
+	image?: string;
+	/** Open Graph type (e.g. "website", "article"). Defaults to "website". */
+	type?: string;
+}
+
+const { title, sharingTitle, sharingImage, description, image, type = "website" } = Astro.props as Props;
+
+// Brand logo with base path prepended
+const brandLogo = prependBase("/favicon.svg");
+
+// Feature flag: set to true to bring back the language switcher (bottom-left) once
+// localization is ready to ship. Currently hidden while translations are incomplete.
+const SHOW_LANGUAGE_SWITCHER = false;
+
+// Get locale from middleware (set in src/middleware.ts)
+const locale = Astro.locals.locale || 'en-US';
+// Use full locale code for HTML lang attribute (e.g., 'en-US', 'es-US')
+// HTML lang attribute supports full locale codes like 'en-US', 'es-US', etc.
+const langCode = locale;
+
+// SEO / social sharing metadata - falls back to generic site-wide defaults when a page
+// doesn't provide its own title/description/image (see src/lib/seo.ts for how pages derive
+// these from their own content).
+const SITE_NAME = "Museum of Art and Digital Entertainment";
+const DEFAULT_TITLE = "Museum of Art and Digital Entertainment: Oakland's Video Game Museum";
+const DEFAULT_DESCRIPTION = "Museum of Art and Digital Entertainment: Oakland's Video Game Museum";
+// TODO: this is hardcoded to a specific Contentful asset URL for now. Move this to a
+// manageable Contentful entry/field (e.g. a site-settings singleton) so editors can change
+// the site-wide default social-share image without a code change.
+const DEFAULT_OG_IMAGE = "https://images.ctfassets.net/cgxqg7gc43zp/2grDaCxJYoFHX20wuJbyKR/780a2d98ad75bc033de447b9564ef705/IMG_2511.jpeg";
+
+const pageTitle = title?.trim() || undefined;
+const resolvedTitle = pageTitle ? `${pageTitle} | ${SITE_NAME}` : DEFAULT_TITLE;
+const resolvedSharingTitle = sharingTitle ? sharingTitle?.trim() : resolvedTitle;
+const resolvedDescription = description?.trim() || DEFAULT_DESCRIPTION;
+const resolvedImage = image?.trim() || DEFAULT_OG_IMAGE;
+const resolvedSharingImage = sharingImage ? sharingImage?.trim() : resolvedImage;
+const canonicalUrl = Astro.url.href;
+console.log("Sharing Image:" + sharingImage);
+---
+<!doctype html>
+<html lang={langCode}>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="description" content={resolvedDescription} />
+		<meta name="keywords" content="museum, video games, Oakland, California, USA" />
+		<meta name="author" content="Museum of Art and Digital Entertainment" />
+		<meta name="robots" content="index, follow" />
+		<meta name="googlebot" content="index, follow" />
+		<meta name="bingbot" content="index, follow" />
+		<meta name="yandexbot" content="index, follow" />
+		<link rel="icon" type="image/svg+xml" href={brandLogo} />
+		<meta name="generator" content={Astro.generator} />
+		<title>{resolvedTitle}</title>
+		<link rel="canonical" href={canonicalUrl} />
+
+		<!-- Open Graph / social sharing (Facebook, Bluesky, etc.) -->
+		<meta property="og:site_name" content={SITE_NAME} />
+		<meta property="og:type" content={type} />
+		<meta property="og:title" content={resolvedSharingTitle} />
+		<meta property="og:description" content={resolvedDescription} />
+		<meta property="og:url" content={canonicalUrl} />
+		<meta property="og:image" content={resolvedSharingImage} />
+
+		<!-- Twitter/X Card (also used by several other platforms as a fallback) -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={pageTitle || DEFAULT_TITLE} />
+		<meta name="twitter:description" content={resolvedDescription} />
+		<meta name="twitter:image" content={resolvedSharingImage} />
+
+		<!-- Google Fonts - Load before CSS to prevent Safari font loading issues -->
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DSV1YSFPM2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-DSV1YSFPM2');
+    </script>
+	</head>
+	<body>
+		<!-- Preview Mode Banner -->
+		<PreviewBanner />
+
+		<!-- Site-wide Alert banner (Contentful "Alert" content type) -->
+		<Alert />
+
+		<!-- Navigation -->
+		<NavBar
+			brand="Museum of Art and Digital Entertainment"
+			brandLogo={brandLogo}
+		/>
+
+		<slot />
+
+		<!-- Language Switcher (bottom left) - toggle SHOW_LANGUAGE_SWITCHER above to re-enable -->
+		{SHOW_LANGUAGE_SWITCHER && <LanguageSwitcher />}
+
+		<!-- Footer -->
+		<Footer />
+	</body>
+</html>
+
+<style>
+	html,
+	body {
+		margin: 0;
+		width: 100%;
+		height: 100%;
+		background-color: var(--color-background);
+	}
+</style>

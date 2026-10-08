@@ -1,0 +1,87 @@
+[
+    { 
+      "name": "doom in gory detail", 
+      "description": "Description 1", 
+      "start_date": "2024-01-01", 
+      "end_date": "2024-01-01", 
+      "location": "Location 1", 
+      "url": "https://example.com", 
+      "images": ["https://images.steelcase.com/image/upload/c_fill,q_auto,f_auto,h_900,w_1600/v1567243086/6130_1000.jpg"], 
+      "tags": ["tag1", "tag2"],
+      "presenters": [
+        { 
+          "firstName": "Pohung",
+          "lastName": "Chen",
+          "email": "pohung.chen@made.org"
+        }
+      ]
+    },
+    { 
+      "name": "perspective driven collisions", 
+      "description": "Description 1", 
+      "start_date": "2024-01-01", 
+      "end_date": "2024-01-01", 
+      "location": "Location 1", 
+      "url": "https://example.com", 
+      "images": ["https://images.steelcase.com/image/upload/c_fill,q_auto,f_auto,h_900,w_1600/v1567243086/6130_1000.jpg"], 
+      "tags": ["tag1", "tag2"],
+      "presenters": [
+        { 
+          "firstName": "Pohung",
+          "lastName": "Chen",
+          "email": "pohung.chen@made.org"
+        }
+      ]
+    },
+    { 
+      "name": "Gaming for Education", 
+      "description": "Description 1", 
+      "start_date": "2024-01-01", 
+      "end_date": "2024-01-01", 
+      "location": "Location 1", 
+      "url": "https://example.com", 
+      "images": ["https://images.steelcase.com/image/upload/c_fill,q_auto,f_auto,h_900,w_1600/v1567243086/6130_1000.jpg"], 
+      "tags": ["tag1", "tag2"],
+      "presenters": [
+        { 
+          "firstName": "Pohung",
+          "lastName": "Chen",
+          "email": "pohung.chen@made.org"
+        }
+      ]
+    },
+    { 
+      "name": "Designing Card Based Games", 
+      "description": "Description 1", 
+      "start_date": "2024-01-01", 
+      "end_date": "2024-01-01", 
+      "location": "Location 1", 
+      "url": "https://example.com", 
+      "images": ["https://images.steelcase.com/image/upload/c_fill,q_auto,f_auto,h_900,w_1600/v1567243086/6130_1000.jpg"], 
+      "tags": ["tag1", "tag2"],
+      "presenters": [
+        { 
+          "firstName": "John",
+          "lastName": "Doe",
+          "email": "john.doe@made.org"
+        }
+      ]
+    },
+    { 
+      "name": "Turn Based Game Design", 
+      "description": "Description 1", 
+      "start_date": "2024-01-01", 
+      "end_date": "2024-01-01", 
+      "location": "Location 1", 
+      "url": "https://example.com", 
+      "images": ["https://images.steelcase.com/image/upload/c_fill,q_auto,f_auto,h_900,w_1600/v1567243086/6130_1000.jpg"], 
+      "tags": ["tag1", "tag2"],
+      "presenters": [
+        { 
+          "firstName": "Pohung",
+          "lastName": "Chen",
+          "email": "pohung.chen@made.org"
+        }
+      ]
+    }
+  ]

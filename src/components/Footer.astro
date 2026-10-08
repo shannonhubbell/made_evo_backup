@@ -1,0 +1,199 @@
+---
+import { getByKey } from "../lib/contentful";
+import type { SocialMediaHandle } from "../generated/contentful-types";
+import Mailchimp from "./integrations/Mailchimp.astro";
+
+
+export interface Props {
+  brand?: string;
+  brandLogo?: string;
+  description?: string;
+  copyright?: string;
+  nonprofitText?: string;
+}
+
+// Fetch social media handles from Contentful
+let socialMediaHandles: SocialMediaHandle[] = [];
+
+try {
+  const socialData = await getByKey("socialMediaHandleCollection");
+  if (socialData && socialData.socialMediaHandleCollection && socialData.socialMediaHandleCollection.items) {
+    socialMediaHandles = socialData.socialMediaHandleCollection.items;
+  }
+} catch (error) {
+  console.error("Error fetching social media handles:", error);
+  socialMediaHandles = [];
+}
+
+// Group social media handles by category
+const groupedByCategory: Record<string, SocialMediaHandle[]> = {};
+const nonprofitHandles: SocialMediaHandle[] = [];
+
+socialMediaHandles.forEach((handle) => {
+  const category = handle.category || "Other";
+  if (!groupedByCategory[category]) {
+    groupedByCategory[category] = [];
+  }
+  if (category === "Nonprofit") {
+    nonprofitHandles.push(handle);
+  } else {
+    groupedByCategory[category].push(handle);
+  }
+});
+
+// Define category display order and labels
+const categoryOrder = ["Social Feeds", "Video", "Community", "Nonprofit"];
+const categoryLabels: Record<string, string> = {
+  "Social Feeds": "SOCIAL FEEDS",
+  "Video": "VIDEO",
+  "Community": "COMMUNITY",
+  "Nonprofit": "NONPROFIT",
+};
+
+const year = new Date().getFullYear();
+
+// Default sample data for Footer props
+const defaultFooterData = {
+  brand: "MUSEUM OF ART AND DIGITAL ENTERTAINMENT",
+  brandLogo: undefined,
+  description: "Inspiring the next generation of digital creators through playable preservation.",
+  copyright: `© ${year} Museum of Art and Digital Entertainment. All Rights Reserved.`,
+  nonprofitText: "THE MUSEUM OF ART AND DIGITAL ENTERTAINMENT IS A NONPROFIT 501c(3) CORPORATION."
+};
+
+const {
+  brand = defaultFooterData.brand,
+  brandLogo = defaultFooterData.brandLogo,
+  description = defaultFooterData.description,
+  copyright = defaultFooterData.copyright,
+  nonprofitText = defaultFooterData.nonprofitText
+} = Astro.props;
+---
+
+<footer class="bg-white dark:bg-gray-900">
+
+  <hr class="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8" />
+  <div class="lg:container mx-auto py-8 px-4">
+      <div class="mx-auto">
+          <!-- Social Media Groups -->
+          <div class="flex flex-wrap items-start gap-6 mb-8">
+              {categoryOrder.map((category) => {
+                  const handles = groupedByCategory[category] || [];
+                  if (handles.length === 0) return null;
+
+                  return (
+                      <div class="flex flex-col flex-grow pb-8">
+                          <h3 class="text-sm font-bold uppercase text-gray-900 dark:text-white mb-3">
+                              {categoryLabels[category] || category.toUpperCase()}
+                          </h3>
+                          <div class="flex gap-2">
+                              {handles.map((handle) => (
+                                  <a
+                                      href={handle.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      class="text-gray-900 dark:text-white hover:opacity-75 transition-opacity inline-block"
+                                      aria-label={handle.displayName || handle.name}
+                                  >
+                                      {handle.icon?.url ? (
+                                          <img
+                                              src={handle.icon.url}
+                                              alt={handle.displayName || handle.name}
+                                              class="w-8 h-8 object-contain svg-icon-colorize"
+                                          />
+                                      ) : (
+                                          <span class="text-sm">{handle.displayName || handle.name}</span>
+                                      )}
+                                  </a>
+                              ))}
+                          </div>
+                      </div>
+                  );
+              })}
+
+            <div class="flex flex-wrap flex-row gap-6">
+
+            {nonprofitHandles.length > 0 && (
+              <div class="flex-col pt-1">
+                  {nonprofitHandles[0].icon?.url ? (
+                  <img
+                      src={nonprofitHandles[0].icon.url}
+                      alt={nonprofitHandles[0].displayName || nonprofitHandles[0].name}
+                      class="w-16 h-16 object-contain svg-icon-colorize"
+                  />
+                ) : (
+                    <span class="text-sm">{
+                      nonprofitHandles[0].displayName || nonprofitHandles[0].name
+                    }</span>
+                )}
+              </div>
+            )}
+
+
+              <!-- Nonprofit Information -->
+              <div class="flex-col max-w-64 gap-4 mb-4">
+                  <p class="sm:w-full text-sm uppercase text-gray-900 dark:text-white font-medium leading-relaxed">
+                      {nonprofitText}
+                  </p>
+              </div>
+            </div>
+          </div>
+
+        <div class="flex flex-wrap justify-content items-start gap-10 mb-8">
+            <!-- Location Info -->
+            <div class="flex-col sm:items-left sm:justify-between pb-10">
+                <div class="uppercase text-sm col-span-full font-bold">LOCATION</div>
+                <div class="uppercase text-sm col-span-full">921 Washington Street</div>
+                <div class="uppercase text-sm col-span-full">Oakland, CA 94607</div>
+                <div class="uppercase text-sm col-span-full">+1 (510) 350-8857</div>
+                <div class="uppercase text-sm col-span-full">info@themade.org</div>
+            </div>
+
+            <!-- Hours Info -->
+            <div class="flex-col items-right sm:justify-between">
+                <div class="uppercase text-sm col-span-full font-bold">HOURS</div>
+                <div class="uppercase text-sm col-span-full">10 am - 5 pm Wednesday</div>
+                <div class="uppercase text-sm col-span-full">10 am - 5 pm Thursday</div>
+                <div class="uppercase text-sm col-span-full">11 am - 9 pm Friday</div>
+                <div class="uppercase text-sm col-span-full">11 am - 9 pm Saturday</div>
+                <div class="uppercase text-sm col-span-full">11 am - 7 pm Sunday</div>
+            </div>
+
+            <div class="flex-col items-right sm:justify-between pb-10">
+                <Mailchimp />
+            </div>
+        </div>
+
+          <!-- Copyright -->
+          <div class="flex sm:flex sm:items-center gap-12 sm:justify-between">
+              <div class="flex-col text-sm">
+                  <span class="text-sm text-gray-500 sm:text-center dark:text-gray-400">{copyright}</span>
+              </div>
+              <div class="flex-col text-sm">
+                  <a href="https://www.contentful.com/" target="_blank">
+                      <img src="/images/contentful.svg" class="h-10 object-contain svg-icon-colorize" alt="" />
+                  </a>
+              </div>
+          </div>
+      </div>
+  </div>
+</footer>
+
+<style>
+  /* Colorize SVG images to match text color */
+  .svg-icon-colorize {
+    filter: brightness(0) saturate(100%);
+  }
+
+  /* :global() on the ancestor: data-theme is set on <html> by ThemeToggle.astro,
+     which is outside this component, so it must not be scoped. */
+  :global([data-theme="dark"]) .svg-icon-colorize {
+    filter: brightness(0) saturate(100%) invert(1);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .svg-icon-colorize {
+      filter: brightness(0) saturate(100%) invert(1);
+    }
+  }
+</style>

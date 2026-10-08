@@ -1,0 +1,120 @@
+---
+import { DoubleColumnPropsSchema, type DoubleColumnItem } from "../schema/ui";
+import type z from "zod";
+import ImageResponsive from "./ImageResponsive.astro";
+
+type BaseProps = z.infer<typeof DoubleColumnPropsSchema>;
+
+export interface MiniSplashProps extends BaseProps {
+    truncateLength?: number;
+}
+
+const { isTitleVisible, items, title, truncateLength } = Astro.props as MiniSplashProps;
+
+const overlayClasses = {
+  light: 'bg-white/[var(--bg-opacity)] dark:bg-black/[var(--bg-opacity)] [--bg-opacity:10%]',
+  medium: 'bg-white/[var(--bg-opacity)] dark:bg-black/[var(--bg-opacity)] [--bg-opacity:30%]',
+  dark: 'bg-white/[var(--bg-opacity)] dark:bg-black/[var(--bg-opacity)] [--bg-opacity:80%]'
+};
+
+// Function to truncate HTML content to a maximum character count (text only, not HTML tags)
+function truncateHtml(html: string, maxLength: number): string {
+    if (!maxLength) {
+        return html;
+    }
+    
+    // Strip HTML tags to get plain text for length calculation
+    const textContent = html.replace(/<[^>]*>/g, '');
+    
+    // If text content is already shorter than maxLength, return as-is
+    if (textContent.length <= maxLength) {
+        return html;
+    }
+    
+    // Truncate by counting text characters (not HTML tags)
+    let textCount = 0;
+    let result = '';
+    let inTag = false;
+    let tagBuffer = '';
+    let lastSpacePos = -1;
+    let lastSpaceTextCount = 0;
+    
+    for (let i = 0; i < html.length; i++) {
+        const char = html[i];
+        
+        if (char === '<') {
+            inTag = true;
+            tagBuffer = char;
+        } else if (char === '>') {
+            inTag = false;
+            tagBuffer += char;
+            result += tagBuffer;
+            tagBuffer = '';
+        } else if (inTag) {
+            tagBuffer += char;
+        } else {
+            if (textCount >= maxLength) {
+                // Find the last space to avoid cutting words
+                if (lastSpacePos > 0 && lastSpaceTextCount > maxLength * 0.7) {
+                    result = result.substring(0, lastSpacePos);
+                }
+                result += '...';
+                break;
+            }
+            result += char;
+            textCount++;
+            
+            // Track the last space position
+            if (char === ' ') {
+                lastSpacePos = result.length;
+                lastSpaceTextCount = textCount;
+            }
+        }
+    }
+    
+    return result;
+}
+
+---
+<div class="lg:container mx-auto px-4 py-8">
+    { title ? (<h2 class="ui-h3 mb-4">{title}</h2>) : "" }
+    <div class="flex flex-col gap-8">
+        { items?.map((item: DoubleColumnItem) => {
+            const hasImage = !!item.image && item.image.trim() !== '';
+            
+            if (!hasImage) {
+                // If no image, don't render anything (MiniSplash requires an image)
+                return null;
+            }
+            
+            // Splash-like display with background image
+            return (
+                <div class="relative rounded-lg overflow-hidden h-96 md:h-[500px] lg:h-[600px]">
+                    {/* Background Image */}
+                    <ImageResponsive 
+                        src={item.image!}
+                        alt={item.title || "Background image"}
+                        class="absolute inset-0 w-full h-full object-cover z-0"
+                    />
+                    {/* Overlay for separation */}
+                    <div class={`absolute inset-0 ${overlayClasses.dark} z-10`}></div>
+                    {/* Content on top */}
+                    <div class="relative z-20 h-full flex flex-col justify-end p-6 md:p-8 lg:p-12">
+                        <div class="w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl">
+                            { item.title ? (
+                                <h1 class="ui-h2 mb-4">{item.title}</h1>
+                            ) : "" }
+                            <div class="content-wrapper mb-4" set:html={ truncateLength ? truncateHtml(item.content, truncateLength) : item.content } />
+                            { 
+                                item.callToAction ? (
+                                    <a href={item.callToAction.url} class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white px-6 py-3 rounded-md mt-4 uppercase font-bold inline-block w-fit hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">{item.callToAction.title}</a>
+                                ) : <></>
+                            }
+                        </div>
+                    </div>
+                </div>
+            );
+        }) || []}
+    </div>
+</div>
+

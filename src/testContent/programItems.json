@@ -1,0 +1,155 @@
+[
+    {
+        "name": "All-Playable Exhibits",
+        "description": "Play Video Game History",
+        "url": "/programs/all-playable-exhibits",
+        "events": [],
+        "exhibits": [],
+        "items": [],
+        "metrics": [],
+        "products": [],
+        "descriptions": []
+    },
+    {
+        "name": "Field Trips",
+        "description": "Learn from Video Games",
+        "url": "/programs/field-trips",
+        "events": [],
+        "exhibits": [],
+        "items": [],
+        "metrics": [],
+        "products": [
+            {
+                "name": "Admission",
+                "description": "Field Trip Admission",
+                "images": ["https://images.steelcase.com/image/upload/c_fill,q_auto,f_auto,h_900,w_1600/v1567243086/6130_1000.jpg"],
+                "SKU": "FIELD_TRIP_ADMISSION",
+                "tags": ["Pong"],
+                "price": 10
+            },
+            {
+                "name": "Education Lectures",
+                "description": "One of many classes available for your field trip",
+                "images": ["https://images.steelcase.com/image/upload/c_fill,q_auto,f_auto,h_900,w_1600/v1567243086/6130_1000.jpg"],
+                "SKU": "GAME_DESIGN_CRITIQUE",
+                "tags": ["Pong"],
+                "price": 10
+            },
+            {
+                "name": "Guided Tours",
+                "description": "Don't just play the games, learn about their importance in history!",
+                "images": ["https://images.steelcase.com/image/upload/c_fill,q_auto,f_auto,h_900,w_1600/v1567243086/6130_1000.jpg"],
+                "SKU": "TOUR",
+                "tags": ["Pong"],
+                "price": 10
+            },
+            {
+                "name": "Hands on Workshops",
+                "description": "Come away with your own masterpiece!",
+                "images": ["https://images.steelcase.com/image/upload/c_fill,q_auto,f_auto,h_900,w_1600/v1567243086/6130_1000.jpg"],
+                "SKU": "PERSPECTIVE_DRAWING",
+                "tags": ["Pong"],
+                "price": 10
+            }
+        ],
+        "descriptions": []
+    },
+    {
+        "name": "MADE Classroom",
+        "description": "Free Game Dev Classes",
+        "url": "/programs/made-classroom",
+        "events": [],
+        "exhibits": [],
+        "items": [],
+        "metrics": [],
+        "products": []
+    },
+    {
+        "name": "MADE Forum",
+        "description": "Community Lectures",
+        "url": "/programs/made-forum",
+        "events": [],
+        "exhibits": [],
+        "items": [],
+        "metrics": [],
+        "products": [],
+        "descriptions": []
+    },
+    {
+        "name": "Creator Night",
+        "description": "Play Video Game History",
+        "url": "/programs/creator-night",
+        "events": [],
+        "exhibits": [],
+        "items": [],
+        "metrics": [],
+        "products": [],
+        "descriptions": []
+    },
+    {
+        "name": "Indie Dev Workshop",
+        "description": "Work Alongside Indies",
+        "url": "/programs/indie-dev-workshop",
+        "events": [],
+        "exhibits": [],
+        "items": [],
+        "metrics": [],
+        "products": [],
+        "descriptions": []
+    },
+    {
+        "name": "Gaming Tournaments",
+        "description": "Smash Melee Tournaments",
+        "url": "/programs/gaming-tournaments",
+        "events": [],
+        "exhibits": [],
+        "items": [],
+        "metrics": [],
+        "products": [],
+        "descriptions": []
+    },
+    {
+        "name": "MADE Showcase",
+        "description": "Play Games by Local Creators",
+        "url": "/programs/made-showcase",
+        "events": [],
+        "exhibits": [],
+        "items": [],
+        "metrics": [],
+        "products": [],
+        "descriptions": []
+    },
+    {
+        "name": "MADE Volunteering",
+        "description": "Help Preserve Video Game History",
+        "url": "/programs/made-volunteering",
+        "events": [],
+        "exhibits": [],
+        "items": [],
+        "metrics": [],
+        "products": [],
+        "descriptions": []
+    },
+    {
+        "name": "MMO Restoration",
+        "description": "Play Restored MMORPGs",
+        "url": "/programs/mmo-restoration",
+        "events": [],
+        "exhibits": [],
+        "items": [],
+        "metrics": [],
+        "products": [],
+        "descriptions": []
+    },
+    {
+        "name": "Community Proposal",
+        "description": "Partner with Us",
+        "url": "/programs/community-proposal",
+        "events": [],
+        "exhibits": [],
+        "items": [],
+        "metrics": [],
+        "products": [],
+        "descriptions": []
+    }
+]

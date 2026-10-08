@@ -1,0 +1,122 @@
+---
+import { getAvailableLocales } from "../lib/contentful/locales";
+
+// Get current locale from middleware
+const currentLocale = Astro.locals.locale || 'en-US';
+const currentLocaleShort = currentLocale.split('-')[0];
+
+// Get current path without locale prefix
+const currentPath = Astro.url.pathname;
+// Remove locale prefix if present (e.g., /en/page-slug -> /page-slug, /en/events/slug -> /events/slug)
+let pathWithoutLocale = currentPath.replace(/^\/[a-z]{2}(-[a-z]{2,3})?\//i, '/');
+// If path is just the locale (e.g., /en), set to root
+if (pathWithoutLocale === '' || pathWithoutLocale === `/${currentLocaleShort}`) {
+  pathWithoutLocale = '/';
+}
+// Ensure it starts with /
+if (!pathWithoutLocale.startsWith('/')) {
+  pathWithoutLocale = '/' + pathWithoutLocale;
+}
+
+// Get all available locales
+const locales = await getAvailableLocales();
+
+// Build language options
+const languageOptions = locales.map(locale => {
+  const shortCode = locale.code.split('-')[0];
+  const url = `/${shortCode}${pathWithoutLocale === '/' ? '' : pathWithoutLocale}`;
+  return {
+    code: locale.code,
+    shortCode,
+    name: locale.name,
+    url,
+    isCurrent: locale.code === currentLocale
+  };
+});
+---
+
+<div class="language-switcher">
+  <label for="language-select" class="sr-only">Select Language</label>
+  <select 
+    id="language-select" 
+    class="language-select"
+    onchange="window.location.href = this.value"
+    aria-label="Select Language"
+  >
+    {languageOptions.map((lang) => (
+      <option value={lang.url} selected={lang.isCurrent}>
+        {lang.shortCode.toUpperCase()}
+      </option>
+    ))}
+  </select>
+</div>
+
+<style>
+  .language-switcher {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 40;
+  }
+
+  .language-select {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 0.25rem;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: rgba(0, 0, 0, 0.8);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .language-select {
+      border-color: rgba(255, 255, 255, 0.2);
+      background-color: rgba(0, 0, 0, 0.6);
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  [data-theme="dark"] .language-select {
+    border-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(0, 0, 0, 0.6);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .language-select:hover {
+    background-color: rgba(255, 255, 255, 1);
+    border-color: rgba(0, 0, 0, 0.3);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .language-select:hover {
+      background-color: rgba(0, 0, 0, 0.8);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  [data-theme="dark"] .language-select:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .language-select:focus {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+</style>

@@ -1,0 +1,344 @@
+---
+// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
+// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+
+import Layout from "../layouts/Layout.astro";
+import Splash from "../components/Splash.astro";
+import NavBar from "../components/Navbar.astro";
+import { GridItemSchema, validateMenuItems, TimelineItemSchema, validateTimelineItems } from "../schema/ui";
+
+import "../styles/global.css";
+import ResponsiveGrid from "../components/ResponsiveGrid.astro";
+import VerticalTimeline from "../components/VerticalTimeline.astro";
+import Calendar from "../components/Calendar.astro";
+import Graph from "../components/Graph.astro";
+import StatsBar from "../components/StatsBar.astro";
+import GoogleFormLoader from "../components/hydrated/forms/GoogleFormLoader.vue";
+import GoogleSheetFormLoader from "../components/hydrated/forms/GoogleSheetFormLoader.vue";
+import navigationMenuItemsData from "../testContent/navigationMenuItems.json";
+
+let gridItems = [
+  GridItemSchema.parse({
+    image: "/item1.png",
+    title: "Item 1",
+    url: "/item1",
+    subtitle: "Info on Item 1"
+  }),
+  GridItemSchema.parse({
+    image: "/item2.png",
+    title: "Item 2",
+    url: "/item2",
+    subtitle: "Info on Item 2"
+  }),
+  GridItemSchema.parse({
+    image: "/item3.png",
+    title: "Item 3",
+    url: "/item3",
+    subtitle: "Info on Item 3"
+  }),
+]
+
+// Navigation menu data
+const navigationMenuItems = validateMenuItems(navigationMenuItemsData);
+
+// Google Sheets demo – spreadsheet ID from env or default
+const googleSheetId = import.meta.env.GOOGLE_SHEET_ID || '1voWkOwdw79okFLqtPNeWyvjbd15Oks0t0-sJKotXUiM';
+// Sample timeline data - demonstrating unsorted chronological data
+const timelineItems = validateTimelineItems([
+  {
+    date: "2024-06-15",
+    title: "Summer Exhibition Opening",
+    description: "Grand opening of our summer interactive exhibit featuring modern art installations.",
+    image: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=400&fit=crop"
+  },
+  {
+    date: "2024-03-20",
+    title: "Spring Workshop Series",
+    description: "Educational workshops for children and adults focusing on digital creativity.",
+    image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=400&fit=crop"
+  },
+  {
+    date: "2024-09-10",
+    title: "Fall Festival Launch",
+    description: "Annual fall festival celebrating local artists and community engagement.",
+    image: "https://images.unsplash.com/photo-1511578314322-379afb476865?w=400&h=400&fit=crop"
+  },
+  {
+    date: "2024-01-05",
+    title: "New Year Program Kickoff",
+    description: "Introduction of new year-round programs and membership benefits.",
+    image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400&h=400&fit=crop"
+  },
+  {
+    date: "2024-12-01",
+    title: "Holiday Special Events",
+    description: "Seasonal programming including special holiday-themed exhibits and activities.",
+    image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=400&fit=crop"
+  }
+]);
+
+// Sample calendar events - converting timeline items to calendar format
+const calendarEvents = [
+  {
+    date: new Date("2024-06-15"),
+    title: "Summer Exhibition Opening",
+    description: "Grand opening of our summer interactive exhibit featuring modern art installations.",
+    url: "/events/summer-exhibition"
+  },
+  {
+    date: new Date("2024-03-20"),
+    title: "Spring Workshop Series",
+    description: "Educational workshops for children and adults focusing on digital creativity.",
+    url: "/events/spring-workshop"
+  },
+  {
+    date: new Date("2024-09-10"),
+    title: "Fall Festival Launch",
+    description: "Annual fall festival celebrating local artists and community engagement.",
+    url: "/events/fall-festival"
+  },
+  {
+    date: new Date("2024-01-05"),
+    title: "New Year Program Kickoff",
+    description: "Introduction of new year-round programs and membership benefits.",
+    url: "/events/new-year-kickoff"
+  },
+  {
+    date: new Date("2024-12-01"),
+    title: "Holiday Special Events",
+    description: "Seasonal programming including special holiday-themed exhibits and activities.",
+    url: "/events/holiday-special"
+  },
+];
+
+// Sample graph data for bar chart
+const graphData = {
+  categories: ['January', 'February', 'March', 'April', 'May', 'June'],
+  series: [
+    {
+      name: 'Visitors',
+      data: [40, 300, 1800, 2100, 1900, 2400]
+    },
+    {
+      name: 'Events',
+      data: [4343, 3, 15238, 18238, 14238, 20238]
+    },
+    {
+      name: 'Programs',
+      data: [3434, 7343, 9343, 11343, 10343, 12343]
+    }
+  ]
+};
+
+// Sample stats data for StatsBar
+const statsData = [
+  {
+    label: 'Total Visitors',
+    value: 12543,
+    trend: {
+      direction: 'up' as const,
+      percentage: 12.5
+    },
+    icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
+  },
+  {
+    label: 'Active Programs',
+    value: 24,
+    trend: {
+      direction: 'up' as const,
+      percentage: 8.3
+    },
+    icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'
+  },
+  {
+    label: 'Community Engagement',
+    value: 89,
+    trend: {
+      direction: 'up' as const,
+      percentage: 5.2
+    },
+    icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
+  },
+  {
+    label: 'Revenue',
+    value: '$245K',
+    trend: {
+      direction: 'down' as const,
+      percentage: 2.1
+    },
+    icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+  }
+];
+---
+<Layout>
+
+   <Splash
+     padding="lg"
+     overlay={true}
+     overlayOpacity="medium"
+     isFirstInContainer={true}
+     contents={[{
+       videoPoster: "https://images.steelcase.com/image/upload/c_fill,q_auto,f_auto,h_900,w_1600/v1567243086/6130_1000.jpg",
+       subtitle: "Wed - Sun | All-Playable Exhibit Floor",
+       title: "Playable Video Game Exhibits from Pong to the Xbox 360"
+     }]}
+   />
+
+  <div class="lg:container mx-auto px-4 py-8">
+    <h2 class="ui-h3 mb-4">Programs</h2>
+    <ResponsiveGrid
+      items={ gridItems.map((gridItem) => {
+        return {
+          image: `${gridItem.image}`,
+          title: `${gridItem.title}`,
+          url: `${gridItem.url}`,
+          subtitle: `${gridItem.subtitle}`
+        }
+      }) }
+      maxGridItems="4"
+    />
+  </div>
+
+  <div class="lg:container mx-auto px-4 py-8">
+    <h2 class="ui-h3 mb-4">Event Timeline</h2>
+    <VerticalTimeline items={timelineItems} />
+  </div>
+
+  <div class="lg:container mx-auto px-4 py-8">
+    <h2 class="ui-h3 mb-4">Calendar</h2>
+    <Calendar events={calendarEvents} showNavigation={true} />
+  </div>
+
+  <div class="lg:container mx-auto px-4 py-8">
+    <h2 class="ui-h3 mb-4">Organization Health Overview</h2>
+    <StatsBar stats={statsData} />
+  </div>
+
+  <div class="lg:container mx-auto px-4 py-8">
+    <h2 class="ui-h3 mb-4">Statistics Chart (Bar)</h2>
+    <Graph
+      data={graphData}
+      title="Monthly Museum Statistics"
+      height="400px"
+      type="bar"
+    />
+  </div>
+
+  <div class="lg:container mx-auto px-4 py-8">
+    <h2 class="ui-h3 mb-4">Trend Analysis Chart (Line)</h2>
+    <Graph
+      data={graphData}
+      title="Monthly Museum Trends"
+      height="400px"
+      type="trend"
+    />
+  </div>
+
+  <div class="lg:container mx-auto px-4 py-8">
+    <h2 class="ui-h3 mb-4">Google Form (native embed)</h2>
+    <p class="text-gray-600 dark:text-gray-400 mb-4 max-w-2xl">
+      Native Google Form embed for slug &quot;google-form-proposal-form&quot;.
+    </p>
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
+    >
+      <GoogleFormLoader slug="google-form-proposal-form" client:load />
+    </div>
+  </div>
+
+  <div class="lg:container mx-auto px-4 py-8">
+    <h2 class="ui-h3 mb-4">Google Sheet Form (spreadsheet-form-community-proposal)</h2>
+    <p class="text-gray-600 dark:text-gray-400 mb-4 max-w-2xl">
+      Form with labels from the first row of the Google Sheet.
+    </p>
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 max-w-xl"
+    >
+      <GoogleSheetFormLoader slug="spreadsheet-form-community-proposal" client:load />
+    </div>
+  </div>
+
+  <div class="lg:container mx-auto px-4 py-8">
+    <h2 class="ui-h3 mb-4">SpreadsheetForm (Contentful)</h2>
+    <p class="text-gray-600 dark:text-gray-400 mb-4 max-w-2xl">
+      All SpreadsheetForm entries from Contentful.
+    </p>
+    <div
+      id="spreadsheet-form-demo"
+      class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
+    >
+      <div class="text-gray-500 dark:text-gray-400 text-sm" data-form-status>Loading…</div>
+      <pre class="mt-4 text-sm overflow-x-auto hidden" data-form-output></pre>
+    </div>
+  </div>
+
+  <div class="lg:container mx-auto px-4 py-8">
+    <h2 class="ui-h3 mb-4">Google Sheets API Demo</h2>
+    <p class="text-gray-600 dark:text-gray-400 mb-4 max-w-2xl">
+      First 10 cells of row 1 from the configured spreadsheet (service account).
+    </p>
+    <div
+      id="sheets-demo"
+      class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
+    >
+      <div class="text-gray-500 dark:text-gray-400 text-sm" data-sheets-status>Loading…</div>
+      <pre class="mt-4 text-sm overflow-x-auto hidden" data-sheets-output></pre>
+    </div>
+  </div>
+
+</Layout>
+
+<script define:vars={{ googleSheetId }}>
+  // All SpreadsheetForms from Contentful
+  const formDemo = document.getElementById('spreadsheet-form-demo');
+  if (formDemo) {
+    const formStatus = formDemo.querySelector('[data-form-status]');
+    const formOutput = formDemo.querySelector('[data-form-output]');
+    fetch('/api/google/sheets/index.json')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) {
+          formStatus.textContent = `Error: ${data.error}`;
+          formStatus.classList.add('text-red-600', 'dark:text-red-400');
+        } else {
+          const items = data.items ?? [];
+          formStatus.textContent = `Loaded ${items.length} SpreadsheetForm(s)`;
+          if (formOutput) {
+            formOutput.textContent = JSON.stringify(data, null, 2);
+            formOutput.classList.remove('hidden');
+          }
+        }
+      })
+      .catch((e) => {
+        formStatus.textContent = `Error: ${e.message}`;
+        formStatus.classList.add('text-red-600', 'dark:text-red-400');
+      });
+  }
+
+  // Google Sheets row data
+  const demo = document.getElementById('sheets-demo');
+  if (demo && googleSheetId) {
+    const status = demo.querySelector('[data-sheets-status]');
+    const output = demo.querySelector('[data-sheets-output]');
+    const url = `/api/google/form.json?spreadsheetId=${encodeURIComponent(googleSheetId)}`;
+
+    fetch(url)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) {
+          status.textContent = `Error: ${data.error}`;
+          status.classList.add('text-red-600', 'dark:text-red-400');
+        } else {
+          status.textContent = `Range: ${data.range}`;
+          if (output) {
+            output.textContent = JSON.stringify(data.values, null, 2);
+            output.classList.remove('hidden');
+          }
+        }
+      })
+      .catch((e) => {
+        status.textContent = `Error: ${e.message}`;
+        status.classList.add('text-red-600', 'dark:text-red-400');
+      });
+  }
+</script>

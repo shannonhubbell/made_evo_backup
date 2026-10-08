@@ -1,0 +1,281 @@
+---
+import ThemeToggle from "./ThemeToggle.astro";
+
+import { getByKey } from "../lib/contentful";
+import { validateMenuItem, type MenuItem } from "../schema/ui";
+import { prependBase, getBaseUrl } from "../lib/helpers";
+import type { MenuItem as ContentfulMenuItem } from "../generated/contentful-types";
+
+export interface Props {
+  brand?: string;
+  brandLogo?: string;
+  menuItems?: Array<MenuItem>;
+}
+
+// Get the base URL from Astro config
+const baseUrl = getBaseUrl();
+
+// Get current locale from middleware (set in src/middleware.ts or route files)
+const locale = Astro.locals.locale || 'en-US';
+const localeShort = locale.split('-')[0]; // e.g., 'en' from 'en-US'
+
+/**
+ * Add locale prefix to a URL if it's a relative internal link
+ * Removes any existing locale prefix first to avoid duplication
+ */
+function addLocaleToUrl(href: string): string {
+  // Don't modify absolute URLs or external links
+  if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('//') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+    return href;
+  }
+
+  // Normalize: ensure href starts with /
+  let normalizedHref = href.startsWith('/') ? href : '/' + href;
+
+  // Remove any existing locale prefix to avoid duplication
+  // Split by '/' and filter out empty strings
+  const segments = normalizedHref.split('/').filter(Boolean);
+
+  // Check if first segment is a locale code and remove it
+  if (segments.length > 0) {
+    const firstSegment = segments[0];
+    const localePattern = /^[a-z]{2}(-[a-z]{2,3})?$/i;
+    if (localePattern.test(firstSegment)) {
+      // Remove the locale segment
+      segments.shift();
+    }
+  }
+
+  // Rebuild the path without locale
+  const pathWithoutLocale = segments.length > 0 ? '/' + segments.join('/') : '/';
+
+  // Add current locale prefix
+  if (pathWithoutLocale === '/') {
+    return `/${localeShort}`;
+  }
+
+  return `/${localeShort}${pathWithoutLocale}`;
+}
+
+let menuItems: Array<MenuItem> = [];
+
+try {
+  const menuData = await getByKey("menuItemCollection");
+  if (menuData && menuData.menuItemCollection && menuData.menuItemCollection.items) {
+    menuItems = menuData.menuItemCollection.items.map((item: ContentfulMenuItem) => {
+      // First add locale to the href, then prepend base
+      const rawHref = item.href === "" ? "/" : item.href?.toString() || "/";
+      const localizedHref = addLocaleToUrl(rawHref);
+      const finalHref = prependBase(localizedHref, locale);
+
+      return validateMenuItem({
+        index: item.index,
+        label: item.label,
+        href: finalHref,
+        isTopLevel: item.isTopLevel ?? false,
+        isButton: item.isButton,
+        children: item.childrenCollection?.items && item.childrenCollection.items.length > 0
+          ? item.childrenCollection.items.map((child: ContentfulMenuItem) => {
+              const childRawHref = child.href === "" ? "/" : child.href?.toString() || "/";
+              const childLocalizedHref = addLocaleToUrl(childRawHref);
+              const childFinalHref = prependBase(childLocalizedHref, locale);
+              return validateMenuItem({
+                index: child.index,
+                label: child.label,
+                href: childFinalHref
+              })
+            })
+          : undefined
+      })
+    });
+  }
+} catch (error) {
+  console.error("Error fetching menu items:", error);
+  // Fallback to empty array if there's an error
+  menuItems = [];
+}
+
+const {
+  brand = "Brand",
+  brandLogo
+} = Astro.props;
+
+// CSS class variables - Consolidated color system (4 light + 4 dark)
+// Light: bg-white, bg-gray-100, text-gray-900, text-gray-500, border-gray-200, blue-600
+// Dark: bg-gray-900, bg-gray-700, text-white, text-gray-400, border-gray-700, blue-500
+const navClasses = "fixed top-0 left-0 right-0 z-50 bg-white border-gray-200 dark:bg-gray-900 dark:border-gray-700 shadow-sm";
+const navContainerClasses = "mx-auto px-4 py-4 lg:py-0 ";
+const navInnerClasses = "max-w-screen flex flex-wrap items-center justify-between mx-auto";
+const brandClasses = "flex items-center space-x-3 rtl:space-x-reverse";
+const brandTextClasses = "md:visible lg:hidden self-center text-md font-semibold text-gray-900 dark:text-white uppercase leading-tight max-w-60 lg:max-w-60";
+const toggleButtonClasses = "inline-flex items-center p-2 w-10 h-10 justify-center text-md text-gray-500 rounded-lg lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-700";
+const menuOverlayClasses = "hidden w-full lg:block lg:w-auto lg:relative absolute top-full left-0 right-0 lg:top-auto lg:left-auto lg:right-auto bg-white dark:bg-gray-900 lg:bg-transparent lg:dark:bg-transparent z-50 lg:z-auto";
+const menuListClasses = "uppercase font-medium flex flex-col lg:p-0 lg:mt-0 lg:flex-row lg:space-x-8 rtl:space-x-reverse lg:bg-transparent bg-white dark:bg-gray-900 lg:shadow-none shadow-lg lg:border-none border-t border-gray-200 dark:border-gray-700 lg:rounded-none rounded-b-lg lg:max-h-none h-[calc(100vh-80px)] lg:h-auto overflow-y-auto lg:overflow-y-visible px-4 lg:px-0 py-4 lg:py-0";
+const dropdownToggleClasses = "text-m uppercase flex items-center justify-between w-full py-4 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-600 lg:my-4 lg:py-2 lg:px-3 dark:text-white md:dark:hover:text-blue-500 dark:focus:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent lg:py-2";
+const buttonItemClasses = "text-md uppercase inline-flex items-center justify-center px-4 py-4 my-2 lg:my-4 lg:py-2 text-white bg-blue-600 rounded-lg hover:opacity-90 focus:ring-4 focus:ring-blue-600 dark:bg-blue-500 dark:hover:opacity-90 dark:focus:ring-blue-500 font-medium transition-colors duration-200";
+const buttonItemActiveClasses = "opacity-90";
+const regularLinkClasses = "text-md uppercase block text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-600 py-4 px-3 lg:my-4 lg:py-2 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent";
+const regularLinkActiveClasses = "text-blue-600 dark:text-blue-500";
+const dropdownMenuClasses = "text-md hidden lg:absolute lg:right-0 lg:mt-2 lg:z-10 lg:bg-white lg:divide-y lg:divide-gray-200 lg:rounded-lg lg:shadow lg:w-65 lg:dark:bg-gray-700 lg:dark:divide-gray-700";
+const dropdownListClasses = "py-2 text-md text-gray-900 dark:text-gray-400 text-right";
+const dropdownLinkClasses = "text-md block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-white";
+const dropdownLinkActiveClasses = "text-blue-600 dark:text-blue-500";
+const toggleContainerClasses = "flex items-center space-x-2";
+---
+
+<nav class={navClasses}>
+    <div class={navContainerClasses}>
+        <div class={navInnerClasses}>
+            <!-- Brand -->
+            <a href={`${baseUrl === "/" ? "" : baseUrl.replace(/\/$/, "")}/${localeShort}`} class={brandClasses}>
+            <img src={brandLogo} class="h-10 filter dark:invert" alt={`${brand} logo`} />
+            <span class={brandTextClasses}>{brand}</span>
+            </a>
+
+            <!-- Theme toggle and mobile menu button -->
+            <div class={toggleContainerClasses}>
+              <button
+                data-collapse-toggle="navbar-default"
+                type="button"
+                class={toggleButtonClasses}
+                aria-controls="navbar-default"
+                aria-expanded="false"
+              >
+                <span class="sr-only">Open main menu</span>
+                <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Navigation menu -->
+            <div class={menuOverlayClasses} id="navbar-default">
+              <ul class={menuListClasses}>
+                  {menuItems.sort((a: MenuItem, b: MenuItem) => (a.index || 0) - (b.index || 0)).map((item: MenuItem, index: number) => (
+                      <li class="relative mr-3">
+                      {item.children ? (
+                      <!-- Dropdown item -->
+                      <button
+                          id={`dropdown-${index}`}
+                          data-dropdown-toggle={`dropdown-menu-${index}`}
+                          class={dropdownToggleClasses}
+                      >
+                          {item.label}
+                          <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                          </svg>
+                      </button>
+                      ) : item.isButton ? (
+                      <!-- Button item -->
+                      <a
+                          href={item.href}
+                          class={`${buttonItemClasses} ${item.active ? buttonItemActiveClasses : ''}`}
+                          aria-current={item.active ? 'page' : undefined}
+                      >
+                          {item.label}
+                      </a>
+                      ) : (
+                      <!-- Regular link -->
+                      <a
+                          href={item.href}
+                          class={`${regularLinkClasses} ${item.active ? regularLinkActiveClasses : ''}`}
+                          aria-current={item.active ? 'page' : undefined}
+                      >
+                          {item.label}
+                      </a>
+                      )
+                      }
+
+                      <!-- Desktop dropdown menu -->
+                      {item.children && (
+                      <div
+                          id={`dropdown-menu-${index}`}
+                          class={dropdownMenuClasses}
+                      >
+                          <ul class={dropdownListClasses}>
+                          {item.children.map((dropdownItem: MenuItem) => (
+                              <li>
+                              <a
+                                  href={dropdownItem.href}
+                                  class={`${dropdownLinkClasses} ${dropdownItem.active ? dropdownLinkActiveClasses : ''}`}
+                                  aria-current={dropdownItem.active ? 'page' : undefined}
+                              >
+                                  {dropdownItem.label}
+                              </a>
+                              </li>
+                          ))}
+                          </ul>
+                      </div>
+                      )}
+                  </li>
+                  )
+                  )}
+              </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<script>
+  // Mobile menu toggle functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const button = document.querySelector('[data-collapse-toggle="navbar-default"]');
+    const menu = document.getElementById('navbar-default');
+
+    if (button && menu) {
+      button.addEventListener('click', function() {
+        const isExpanded = button.getAttribute('aria-expanded') === 'true';
+        button.setAttribute('aria-expanded', (!isExpanded).toString());
+        menu.classList.toggle('hidden');
+      });
+    }
+
+    // Dropdown functionality
+    const dropdownButtons = document.querySelectorAll('[data-dropdown-toggle]');
+    dropdownButtons.forEach(button => {
+      button.addEventListener('click', function(this: HTMLElement) {
+        const dropdownId = this.getAttribute('data-dropdown-toggle');
+        const mobileDropdownId = dropdownId?.replace('dropdown-menu-', 'mobile-dropdown-');
+        const dropdown = dropdownId ? document.getElementById(dropdownId) : null;
+        const mobileDropdown = mobileDropdownId ? document.getElementById(mobileDropdownId) : null;
+
+        // Close all other dropdowns
+        document.querySelectorAll('[id^="dropdown-menu-"]').forEach(dd => {
+          if (dd.id !== dropdownId) {
+            dd.classList.add('hidden');
+          }
+        });
+
+        // Close all other mobile dropdowns
+        document.querySelectorAll('[id^="mobile-dropdown-"]').forEach(dd => {
+          if (dd.id !== mobileDropdownId) {
+            dd.classList.add('hidden');
+          }
+        });
+
+        // Toggle desktop dropdown
+        if (dropdown) {
+          dropdown.classList.toggle('hidden');
+        }
+
+        // Toggle mobile accordion
+        if (mobileDropdown) {
+          mobileDropdown.classList.toggle('hidden');
+        }
+      });
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+      const target = event.target as HTMLElement;
+      if (target && !target.closest('[data-dropdown-toggle]') && !target.closest('[id^="dropdown-menu-"]') && !target.closest('[id^="mobile-dropdown-"]')) {
+        document.querySelectorAll('[id^="dropdown-menu-"]').forEach(dropdown => {
+          dropdown.classList.add('hidden');
+        });
+        document.querySelectorAll('[id^="mobile-dropdown-"]').forEach(dropdown => {
+          dropdown.classList.add('hidden');
+        });
+      }
+    });
+  });
+</script>

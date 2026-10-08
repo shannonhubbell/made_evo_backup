@@ -1,0 +1,25 @@
+---
+import CalendarComponent from "./hydrated/calendar/Calendar.vue";
+
+const { 
+  initialDate = new Date(),
+  showNavigation = true
+} = Astro.props;
+
+const locale = Astro.locals.locale || 'en-US';
+---
+
+<CalendarComponent 
+  :initialDate={initialDate}
+  :showNavigation={showNavigation}
+  :locale={locale}
+  client:load
+/>
+
+<style>
+  /* Additional calendar-specific styles if needed */
+  .calendar-container {
+    font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+</style>
+

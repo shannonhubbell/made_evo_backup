@@ -1,0 +1,153 @@
+---
+export interface TimelineItem {
+  date: string | Date;
+  title: string;
+  description: string;
+  image?: string;
+  content?: string; // HTML content from Contentful rich text
+  url?: string; // URL from Posts or Press types
+}
+
+export interface Props {
+  items: TimelineItem[];
+}
+
+const { items } = Astro.props;
+
+// Ordering is controlled upstream by the data adapter (via the ContentView's
+// "orderBy"/"orderDirection" keys/values), so items are rendered in the order
+// they're received rather than being force-sorted here.
+const sortedItems = items;
+---
+
+<div class="relative w-full py-4">
+  <!-- Vertical line -->
+  <div class="absolute left-4 top-5 bottom-0 w-0.5 bg-gray-400 dark:bg-gray-400"></div>
+
+  <div class="space-y-8 md:space-y-12">
+    {sortedItems.map((item) => {
+      const date = new Date(item.date);
+      const formattedDate = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+
+      return (
+        <div class="relative">
+          <!-- Timeline dot -->
+          <div class="relative z-10 flex-shrink-0 mx-2 w-4 h-4 md:w-4 md:h-4 rounded-full bg-gray-400 dark:bg-gray-400 flex items-center justify-center">
+          </div>
+
+          <!-- Content -->
+          <div class="mx-16">
+            <div class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-1">
+              {formattedDate}
+            </div>
+            <h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              {item.title}
+            </h3>
+            <p class="text-sm md:text-base text-gray-600 dark:text-gray-300">
+              {item.description}
+            </p>
+          </div>
+          <div class="relative mt-8">
+            <!-- URL Button (if URL is provided) -->
+            {item.url && (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="mx-16 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 rounded-md transition-colors mb-4"
+              >
+                <span>Open Link</span>
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            )}
+
+            <!-- Expand/Collapse Button and Content (only show if no URL) -->
+            {!item.url && (
+              <>
+                <button
+                  class="mx-16 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors mb-4"
+                  data-expand-button
+                  aria-expanded="false"
+                >
+                  <span>View More</span>
+                  <svg
+                    class="w-4 h-4 transition-transform duration-200"
+                    data-caret-icon
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                <!-- Collapsible Content -->
+                <div class="hidden flex items-start gap-4 md:gap-6" data-expandable-content>
+                  <div class="mx-16 flex-1 text-left">
+                    {item.content && (
+                      <div class="content-wrapper mt-3 text-sm md:text-base text-gray-600 dark:text-gray-300" set:html={item.content} />
+                    )}
+                  </div>
+
+                  <!-- Image -->
+                  {item.image && (
+                    <div class="px-16 md:p-0 md:flex-shrink-0 ml-auto md:w-1/2  min-w-[50%]">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        class="w-full h-auto md:max-h-300 lg:max-h-180 xl:max-h-80 object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    })}
+  </div>
+</div>
+
+<script is:inline>
+  // Initialize expand/collapse functionality for all timeline items
+  document.addEventListener('DOMContentLoaded', () => {
+    const expandButtons = document.querySelectorAll('[data-expand-button]');
+
+    expandButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const content = button.nextElementSibling;
+        const caretIcon = button.querySelector('[data-caret-icon]');
+        const span = button.querySelector('span');
+        const isExpanded = button.getAttribute('aria-expanded') === 'true';
+
+        if (content && caretIcon && span) {
+          if (isExpanded) {
+            // Collapse
+            content.classList.add('hidden');
+            caretIcon.classList.remove('rotate-180');
+            button.setAttribute('aria-expanded', 'false');
+            span.textContent = 'View More';
+          } else {
+            // Expand
+            content.classList.remove('hidden');
+            caretIcon.classList.add('rotate-180');
+            button.setAttribute('aria-expanded', 'true');
+            span.textContent = 'View Less';
+          }
+        }
+      });
+    });
+  });
+</script>

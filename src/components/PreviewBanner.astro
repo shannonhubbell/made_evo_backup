@@ -1,0 +1,53 @@
+---
+/**
+ * Preview Mode Banner
+ * 
+ * Displays a banner at the top of the page when preview mode is active.
+ * This helps content creators know they're viewing draft/unpublished content.
+ */
+
+// Check if preview mode is active
+const isPreview = 
+  import.meta.env.CONTENTFUL_PREVIEW === 'true' ||
+  (typeof Astro !== 'undefined' && (Astro.locals as any)?.previewMode === true);
+---
+
+{isPreview && (
+  <div class="fixed top-0 left-0 right-0 bg-yellow-500 dark:bg-yellow-600 text-black dark:text-yellow-100 text-center py-2 z-50 shadow-md">
+    <div class="container mx-auto px-4 flex items-center justify-center gap-2">
+      <svg 
+        class="w-5 h-5" 
+        fill="none" 
+        stroke="currentColor" 
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path 
+          stroke-linecap="round" 
+          stroke-linejoin="round" 
+          stroke-width="2" 
+          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" 
+        />
+        <path 
+          stroke-linecap="round" 
+          stroke-linejoin="round" 
+          stroke-width="2" 
+          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" 
+        />
+      </svg>
+      <span class="font-bold">PREVIEW MODE</span>
+      <span class="text-sm">- Showing draft/unpublished content</span>
+      <a 
+        href="/api/preview/disable" 
+        class="ml-4 text-sm underline hover:no-underline"
+        title="Exit preview mode"
+      >
+        Exit Preview
+      </a>
+    </div>
+  </div>
+)}
+
+{isPreview && (
+  <div class="h-10"></div>
+)}

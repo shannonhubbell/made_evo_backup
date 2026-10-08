@@ -1,0 +1,260 @@
+---
+/**
+ * Site-wide Alert banner
+ *
+ * Renders the single most relevant currently-active Alert (see getActiveAlert
+ * in lib/contentful.ts). Positioned `fixed` with a z-index above the Navbar so
+ * it floats as an overlay above all page content (including the nav) without
+ * ever displacing anything below it vertically - showing/dismissing it never
+ * shifts the layout. Dismissible per-browser via localStorage (keyed by the
+ * Alert's entry id, so a new Alert always reappears even if a previous one was
+ * dismissed). Optionally links out through the Alert's `callToAction` field,
+ * which can point to either a CallToAction entry (uses its `url` directly) or
+ * a Post entry (linked to its /blog/posts/{slug} page).
+ */
+import { getActiveAlert } from "../lib/contentful";
+import { prependBase } from "../lib/helpers";
+import type { Alert as AlertEntry } from "../generated/contentful-types";
+
+const locale = Astro.locals.locale || "en-US";
+
+let alert: AlertEntry | null = null;
+try {
+  alert = await getActiveAlert(locale);
+} catch (error) {
+  console.error("[Alert.astro] Error fetching active alert:", error);
+  alert = null;
+}
+
+// Visual treatment per Alert "type" (Contentful enum: Danger | Warning | Message)
+const ALERT_STYLES: Record<string, { outer: string; pill: string; badge: string }> = {
+  Danger: { outer: "", pill: "bg-red-800 text-red-100", badge: "bg-red-500" },
+  Warning: { outer: "", pill: "bg-amber-800 text-amber-100", badge: "bg-amber-500" },
+  Message: { outer: "", pill: "bg-indigo-800 text-indigo-100", badge: "bg-indigo-500" },
+};
+
+const styles = ALERT_STYLES[alert?.type ?? ""] ?? ALERT_STYLES.Message;
+
+// `callToAction` is a polymorphic reference (CallToAction or Post) - resolve whichever
+// one it points to into a concrete href + optional label.
+interface ResolvedCallToAction {
+  href: string;
+  label?: string;
+}
+
+function resolveCallToAction(cta: unknown, currentLocale: string): ResolvedCallToAction | null {
+  const entry = cta as { sys?: { id?: string }; title?: string; url?: string; slug?: string } | null | undefined;
+  if (!entry?.sys?.id) return null;
+
+  // Post entries have a `slug`; CallToAction entries have a `url`.
+  if (typeof entry.slug === "string" && entry.slug) {
+    return { href: prependBase(`/blog/posts/${entry.slug}`, currentLocale), label: entry.title };
+  }
+  if (typeof entry.url === "string" && entry.url) {
+    return { href: entry.url, label: entry.title };
+  }
+  return null;
+}
+
+const resolvedCta = alert ? resolveCallToAction(alert.callToAction, locale) : null;
+const message = alert?.title?.trim() || resolvedCta?.label?.trim() || "";
+const isExternalLink = resolvedCta ? /^https?:\/\//.test(resolvedCta.href) : false;
+---
+
+{alert && message && (
+  <div id="site-alert" class={`${styles.outer} lg:mt-16  mt-14 absolute top-0 inset-x-0 z-[4] text-center py-4 lg:px-4`} data-alert-id={alert.sys.id} data-alert-type={alert.type}>
+    <div class={`p-2 ${styles.pill} items-center leading-none lg:rounded-full flex lg:inline-flex lg:py-2 py-4`} role="alert">
+      <span class={`flex rounded-full ${styles.badge} text-white uppercase px-2 py-1 text-xs font-bold mr-3`}>
+        ALERT
+      </span>
+      {resolvedCta ? (
+        <a
+          href={resolvedCta.href}
+          class="font-semibold mr-2 text-left flex-auto hover:underline"
+          target={isExternalLink ? "_blank" : undefined}
+          rel={isExternalLink ? "noopener noreferrer" : undefined}
+        >
+          {message}
+          <svg class="inline-block fill-current opacity-75 h-4 w-4 ml-1 -mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M12.95 10.707l.707-.707L8 4.343 6.586 5.757 10.828 10l-4.242 4.243L8 15.657l4.95-4.95z"></path>
+          </svg>
+        </a>
+      ) : (
+        <span class="font-semibold mr-2 text-left flex-auto">{message}</span>
+      )}
+      <button
+        type="button"
+        id="site-alert-dismiss"
+        class="shrink-0 opacity-75 hover:opacity-100 transition-opacity"
+        aria-label="Dismiss alert"
+      >
+        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-hidden="true">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+)}
+
+{alert && message && (
+  <button
+    type="button"
+    id="site-alert-restore"
+    class={`${styles.badge} site-alert-restore--hidden absolute inline-flex top-[4.5rem] top-[5rem] left-2 lg:left-4 z-[4] h-10 w-10 rounded-full items-center justify-center shadow-md text-white hover:opacity-90 transition-opacity`}
+    aria-label="Show alert again"
+  >
+    <svg class="fill-current h-4 w-4 mx-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-hidden="true">
+      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v5a1 1 0 00.293.707l3 3a1 1 0 001.414-1.414L11 9.586V5z" clip-rule="evenodd"></path>
+    </svg>
+  </button>
+)}
+
+<style>
+  /* `display` can't be transitioned, so hiding/showing animates opacity + transform
+     instead, with `visibility` flipped after the animation finishes on the way out
+     (immediately on the way in) so the hidden alert doesn't block clicks/tab focus. */
+  #site-alert {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    transition: transform 0.35s ease, opacity 0.35s ease, visibility 0s linear 0s;
+  }
+
+  #site-alert.site-alert--hidden {
+    transform: translateY(-120%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 0.35s ease, opacity 0.35s ease, visibility 0s linear 0.35s;
+  }
+
+  #site-alert-restore {
+    transform: scale(1);
+    opacity: 1;
+    visibility: visible;
+    transition: transform 0.25s ease, opacity 0.25s ease, visibility 0s linear 0s;
+  }
+
+  #site-alert-restore.site-alert-restore--hidden {
+    transform: scale(0.6);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 0.25s ease, opacity 0.25s ease, visibility 0s linear 0.25s;
+  }
+
+  /* Applied only for the initial on-load state sync (see initSiteAlert), so a visitor
+     who already dismissed the alert doesn't see it flash in and animate away again on
+     every subsequent page load. */
+  :global(.site-alert-no-transition) {
+    transition: none !important;
+  }
+</style>
+
+<script>
+  // Dismissible per-browser, keyed by the Alert's entry id so a newly-published
+  // Alert always reappears even if a previous one was dismissed. The dismissal
+  // is stored with a timestamp so "Danger" alerts automatically reappear an
+  // hour after being dismissed (other alert types stay dismissed indefinitely,
+  // same as before, until a different alert id is published).
+  function initSiteAlert() {
+    const alertEl = document.getElementById('site-alert');
+    const dismissBtn = document.getElementById('site-alert-dismiss');
+    const restoreBtn = document.getElementById('site-alert-restore');
+    if (!alertEl) return;
+
+    const alertId = alertEl.dataset.alertId;
+    const alertType = alertEl.dataset.alertType;
+    const storageKey = 'made:dismissed-alert-id';
+    const DANGER_REAPPEAR_MS = 60 * 60 * 1000; // 1 hour
+
+    function readDismissed(): { id: string; dismissedAt: number } | null {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return null;
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.id === 'string' && typeof parsed.dismissedAt === 'number') {
+          return parsed;
+        }
+      } catch {
+        // Ignore malformed/legacy values (e.g. a bare id string from before this format)
+      }
+      return null;
+    }
+
+    const HIDDEN_CLASS = 'site-alert--hidden';
+    const RESTORE_HIDDEN_CLASS = 'site-alert-restore--hidden';
+    const NO_TRANSITION_CLASS = 'site-alert-no-transition';
+
+    // Keeps --alert-height (see global.css) in sync with the alert's actual rendered
+    // height, so the first widget on the page can reserve exactly enough space to clear
+    // it via CSS calc() - rather than a hardcoded pixel guess that would silently break
+    // whenever an alert's text is long enough to wrap onto an extra line. Re-measured on
+    // show/hide and on resize (wrapping can change at different viewport widths).
+    function syncAlertHeight() {
+      const isHidden = alertEl.classList.contains(HIDDEN_CLASS);
+      const height = isHidden ? 0 : alertEl.getBoundingClientRect().height;
+      document.documentElement.style.setProperty('--alert-height', `${height}px`);
+    }
+
+    function showAlert() {
+      alertEl.classList.remove(HIDDEN_CLASS);
+      restoreBtn?.classList.add(RESTORE_HIDDEN_CLASS);
+      syncAlertHeight();
+    }
+
+    function hideAlert() {
+      alertEl.classList.add(HIDDEN_CLASS);
+      restoreBtn?.classList.remove(RESTORE_HIDDEN_CLASS);
+      syncAlertHeight();
+    }
+
+    // Applies a state change with transitions suppressed - used only for the initial
+    // sync below, so a visitor who already dismissed the alert doesn't see it flash in
+    // and animate away again on every subsequent page load.
+    function applyInstantly(fn: () => void) {
+      alertEl.classList.add(NO_TRANSITION_CLASS);
+      restoreBtn?.classList.add(NO_TRANSITION_CLASS);
+      fn();
+      void alertEl.offsetHeight; // force reflow so transition:none applies before the change
+      alertEl.classList.remove(NO_TRANSITION_CLASS);
+      restoreBtn?.classList.remove(NO_TRANSITION_CLASS);
+    }
+
+    window.addEventListener('resize', syncAlertHeight);
+
+    const dismissed = readDismissed();
+
+    if (dismissed && dismissed.id === alertId) {
+      const elapsedMs = Date.now() - dismissed.dismissedAt;
+      const shouldReappear = alertType === 'Danger' && elapsedMs >= DANGER_REAPPEAR_MS;
+
+      if (shouldReappear) {
+        // Enough time has passed for a Danger alert - clear the dismissal and let it show again.
+        localStorage.removeItem(storageKey);
+      } else {
+        applyInstantly(hideAlert);
+      }
+    }
+
+    // Covers the default "still visible" case above, where neither showAlert() nor
+    // hideAlert() ran (harmless to call again in the other cases - just re-measures).
+    syncAlertHeight();
+
+    dismissBtn?.addEventListener('click', () => {
+      if (alertId) {
+        localStorage.setItem(storageKey, JSON.stringify({ id: alertId, dismissedAt: Date.now() }));
+      }
+      hideAlert();
+    });
+
+    // Clicking the small circle resets the dismissal entirely (regardless of alert
+    // type) and brings the alert back immediately.
+    restoreBtn?.addEventListener('click', () => {
+      localStorage.removeItem(storageKey);
+      showAlert();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initSiteAlert);
+</script>

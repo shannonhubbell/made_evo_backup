@@ -1,0 +1,72 @@
+---
+import Event from "../../../components/data_specific/Event.astro";
+import { getEventBySlug, getAllEvents } from "../../../lib/contentful";
+import { isValidLocale, getDefaultLocale, normalizeLocaleCode } from "../../../lib/contentful/locales";
+
+// Always server-rendered for on-demand rendering
+export const prerender = false;
+
+const { locale: localeParam, slug } = Astro.params;
+
+// Validate and normalize locale
+let locale = localeParam || 'en-US';
+
+// Normalize short codes (e.g., 'en' -> 'en-US', 'es' -> 'es-US')
+if (!locale.includes('-')) {
+  locale = await normalizeLocaleCode(locale);
+}
+
+// Validate locale exists in Contentful
+const isValid = await isValidLocale(locale);
+if (!isValid) {
+  // Invalid locale, redirect to default locale version
+  const defaultLocale = await getDefaultLocale();
+  const defaultLocaleShort = defaultLocale.split('-')[0];
+  return Astro.redirect(`/${defaultLocaleShort}/event/${slug}`, 302);
+}
+
+// Fetch navigation data (prev/next events)
+let prevSlug: string | null = null;
+let nextSlug: string | null = null;
+let prevTitle: string | null = null;
+let nextTitle: string | null = null;
+
+if (slug) {
+  try {
+    // Verify event exists
+    const event = await getEventBySlug(slug, locale);
+    if (!event) {
+      return Astro.redirect('/404', 404);
+    }
+
+    // Fetch all events to determine prev/next
+    const allEvents = await getAllEvents();
+    
+    // Find current event index
+    const currentIndex = allEvents.findIndex((e: { slug: string }) => e.slug === slug);
+    
+    // Get previous and next events
+    const prevEvent = currentIndex < allEvents.length - 1 ? allEvents[currentIndex + 1] : null;
+    const nextEvent = currentIndex > 0 ? allEvents[currentIndex - 1] : null;
+    
+    prevSlug = prevEvent?.slug || null;
+    nextSlug = nextEvent?.slug || null;
+    prevTitle = prevEvent?.title || null;
+    nextTitle = nextEvent?.title || null;
+  } catch (error) {
+    console.error(`Error fetching event "${slug}":`, error);
+    return Astro.redirect('/404', 404);
+  }
+}
+
+// Store locale in locals for Layout
+Astro.locals.locale = locale;
+
+---
+<Event 
+  slug={slug} 
+  prevSlug={prevSlug}
+  nextSlug={nextSlug}
+  prevTitle={prevTitle}
+  nextTitle={nextTitle}
+/>

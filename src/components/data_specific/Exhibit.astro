@@ -1,0 +1,119 @@
+---
+import SingleColumn from "../../components/SingleColumn.astro";
+import Layout from "../../layouts/Layout.astro";
+import { getExhibitBySlug, getVideoGamesByExhibitId } from "../../lib/contentful";
+import { renderContentfulRichTextWithEmbeddedAssets } from "../../lib/contentful/rich-text";
+import { DoubleColumnItemSchema } from "../../schema/ui";
+import { prependBase, formatReleaseDate } from "../../lib/helpers";
+import { stripHtml, truncateText } from "../../lib/seo";
+import type { Exhibit, VideoGame } from "../../generated/contentful-types";
+import "../../styles/global.css";
+
+interface Props {
+  slug?: string;
+  locale?: string;
+}
+
+const { slug, locale = 'en-US' } = Astro.props as Props;
+
+let exhibitData: {
+  items: any[];
+  isTitleVisible: boolean;
+  title: string | undefined;
+} = {
+  items: [],
+  isTitleVisible: false,
+  title: undefined,
+};
+
+let videoGames: VideoGame[] = [];
+let exhibitTitle: string | undefined;
+let exhibitDescription: string | undefined;
+let exhibitImage: string | undefined;
+
+// The query fetches title/url on the linked Program, but the generated Exhibit type
+// only types reference fields as `{ sys: { id } }` (it can't know what sub-fields a
+// given query selects) - so we extend it locally, matching the same pattern used for
+// Event.program elsewhere (see categorizedGridFromUpcomingEvents in lib/adapters.ts).
+type ExhibitWithProgram = Exhibit & {
+  program?: { sys?: { id?: string }; title?: string; url?: string };
+};
+let programLink: { title: string; url: string } | undefined;
+
+if (slug !== undefined) {
+  const exhibit = await getExhibitBySlug(slug, locale) as ExhibitWithProgram | null;
+
+  if (exhibit !== null) {
+    const formattedExhibit = DoubleColumnItemSchema.parse({
+      title: exhibit.title,
+      content: renderContentfulRichTextWithEmbeddedAssets(exhibit.content),
+      callToAction: undefined,
+    });
+
+    exhibitData = {
+      items: [formattedExhibit],
+      isTitleVisible: true,
+      title: undefined,
+    };
+
+    exhibitTitle = exhibit.title;
+    exhibitImage = exhibit.imageCollection?.items?.[0]?.url || undefined;
+    const plainContent = stripHtml(formattedExhibit.content);
+    exhibitDescription = plainContent ? truncateText(plainContent, 160) : undefined;
+
+    videoGames = await getVideoGamesByExhibitId(exhibit.sys.id, locale);
+
+    if (exhibit.program?.url) {
+      programLink = {
+        title: exhibit.program.title || "Program",
+        url: prependBase(exhibit.program.url, locale),
+      };
+    }
+  }
+}
+
+---
+
+<Layout title={exhibitTitle} description={exhibitDescription} image={exhibitImage} type="article">
+
+  <SingleColumn items={exhibitData.items} isTitleVisible={exhibitData.isTitleVisible} title={exhibitData.title} isFirstInContainer={true} />
+
+  <div class="flex flex-row flex-wrap">
+    <div class="sm:basis-1/3 basis-full"></div>
+    <div class="sm:basis-2/3 lg:basis-5/12 basis-full p-4">
+      {videoGames.length > 0 && (
+        <section class="mt-12 pt-8 border-t border-gray-300 dark:border-gray-700" aria-labelledby="exhibit-games-heading">
+          <h2 id="exhibit-games-heading" class="text-xl font-semibold text-gray-900 dark:text-white mb-4 ">Video games in this exhibit</h2>
+          <ul class="list-none p-0 m-0 flex flex-col gap-3">
+            {videoGames.map((game) => (
+              <li>
+                <a
+                  href={prependBase(`/video_game/${game.slug}`, locale)}
+                  class="block px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-900 dark:text-white font-medium"
+                >
+                  <span class="block">{game.title}</span>
+                  {game.releaseDate && (
+                    <span class="block text-sm font-normal text-gray-600 dark:text-gray-400 mt-0.5">
+                      {formatReleaseDate(game.releaseDate, locale, game.isDateEstimated)}
+                    </span>
+                  )}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {programLink && (
+        <nav class="mt-12 pt-8 border-t border-gray-300 dark:border-gray-700" aria-label="Exhibit navigation">
+          <a
+            href={programLink.url}
+            class="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full uppercase font-bold shadow-md hover:shadow-lg transition-all"
+          >
+            Back to {programLink.title}
+          </a>
+        </nav>
+      )}
+    </div>
+  </div>
+</Layout>

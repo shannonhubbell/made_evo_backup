@@ -1,0 +1,100 @@
+---
+import SingleColumn from "../SingleColumn.astro";
+import Layout from "../../layouts/Layout.astro";
+import { getVideoGameBySlug } from "../../lib/contentful";
+import { renderContentfulRichTextWithEmbeddedAssets } from "../../lib/contentful/rich-text";
+import { DoubleColumnItemSchema } from "../../schema/ui";
+import { prependBase } from "../../lib/helpers";
+import { stripHtml, truncateText } from "../../lib/seo";
+import "../../styles/global.css";
+
+interface Props {
+  slug?: string;
+  locale?: string;
+  prevSlug?: string | null;
+  nextSlug?: string | null;
+  prevTitle?: string | null;
+  nextTitle?: string | null;
+}
+
+const { slug, locale = 'en-US', prevSlug, nextSlug, prevTitle, nextTitle } = Astro.props as Props;
+
+let gameData: {
+  items: any[];
+  isTitleVisible: boolean;
+  title: string | undefined;
+} = {
+  items: [],
+  isTitleVisible: false,
+  title: undefined,
+};
+
+const navigationData = {
+  prevSlug: prevSlug ?? null,
+  nextSlug: nextSlug ?? null,
+  prevTitle: prevTitle ?? null,
+  nextTitle: nextTitle ?? null,
+};
+
+let gameTitle: string | undefined;
+let gameDescription: string | undefined;
+let gameImage: string | undefined;
+
+if (slug !== undefined) {
+  const game = await getVideoGameBySlug(slug, locale);
+
+  if (game !== null) {
+    const formattedGame = DoubleColumnItemSchema.parse({
+      title: game.title,
+      content: renderContentfulRichTextWithEmbeddedAssets(game.content),
+      callToAction: undefined,
+    });
+
+    gameData = {
+      items: [formattedGame],
+      isTitleVisible: true,
+      title: undefined,
+    };
+
+    gameTitle = game.title;
+    gameImage = game.imageCollection?.items?.[0]?.url || undefined;
+    const plainContent = stripHtml(formattedGame.content);
+    gameDescription = plainContent ? truncateText(plainContent, 160) : undefined;
+  }
+}
+
+---
+
+<Layout title={gameTitle} description={gameDescription} image={gameImage} type="article">
+  <div class="lg:container mx-auto px-4 py-8">
+    <SingleColumn items={gameData.items} isTitleVisible={gameData.isTitleVisible} title={gameData.title} isFirstInContainer={true} />
+
+    {(navigationData.prevSlug || navigationData.nextSlug) && (
+      <nav class="flex justify-between items-center gap-4 mt-12 pt-8 border-t border-gray-300 dark:border-gray-700" aria-label="Video game navigation">
+        {navigationData.prevSlug ? (
+          <a
+            href={prependBase(`/video_game/${navigationData.prevSlug}`, locale)}
+            class="flex flex-col px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-1 max-w-[48%]"
+          >
+            <span class="text-sm text-gray-600 dark:text-gray-400 mb-1">Previous Game</span>
+            <span class="font-bold text-gray-900 dark:text-white">{navigationData.prevTitle}</span>
+          </a>
+        ) : (
+          <div class="flex-1 max-w-[48%]"></div>
+        )}
+
+        {navigationData.nextSlug ? (
+          <a
+            href={prependBase(`/video_game/${navigationData.nextSlug}`, locale)}
+            class="flex flex-col px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-1 max-w-[48%] text-right ml-auto"
+          >
+            <span class="text-sm text-gray-600 dark:text-gray-400 mb-1">Next Game</span>
+            <span class="font-bold text-gray-900 dark:text-white">{navigationData.nextTitle}</span>
+          </a>
+        ) : (
+          <div class="flex-1 max-w-[48%]"></div>
+        )}
+      </nav>
+    )}
+  </div>
+</Layout>

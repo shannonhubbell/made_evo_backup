@@ -1,0 +1,164 @@
+{
+  "objects": [
+    {
+      "type": "ITEM",
+      "id": "A3PT5CH7JI56NRONMQ6BVAK3",
+      "updated_at": "2026-01-05T05:23:43.012Z",
+      "created_at": "2024-04-09T20:27:11.117Z",
+      "version": 1767590623012,
+      "is_deleted": false,
+      "present_at_all_locations": true,
+      "item_data": {
+        "name": "Individual Membership",
+        "is_taxable": true,
+        "variations": [
+          {
+            "type": "ITEM_VARIATION",
+            "id": "74WCRZMOMWXTDJIX2U7KQBS4",
+            "updated_at": "2026-01-05T04:24:45.237Z",
+            "created_at": "2024-04-09T20:27:11.117Z",
+            "version": 1767587085237,
+            "is_deleted": false,
+            "present_at_all_locations": true,
+            "item_variation_data": {
+              "item_id": "A3PT5CH7JI56NRONMQ6BVAK3",
+              "name": "Regular",
+              "ordinal": 1,
+              "pricing_type": "FIXED_PRICING",
+              "price_money": {
+                "amount": 10000,
+                "currency": "USD"
+              },
+              "sellable": true,
+              "stockable": true
+            }
+          }
+        ],
+        "product_type": "REGULAR",
+        "skip_modifier_screen": false,
+        "ecom_available": false,
+        "image_ids": [
+          "J3NQFPRCYULO3DBUBZ45EAK4"
+        ],
+        "categories": [
+          {
+            "id": "U7Z27ZAFTNJFOPMLVO3FWXGZ",
+            "ordinal": 16777216
+          }
+        ],
+        "is_archived": false,
+        "reporting_category": {
+          "id": "U7Z27ZAFTNJFOPMLVO3FWXGZ",
+          "ordinal": 16777216
+        }
+      }
+    },
+    {
+      "type": "ITEM",
+      "id": "HE37XJ7A5V77AF4UXTZDYZKJ",
+      "updated_at": "2026-01-05T05:25:50.9Z",
+      "created_at": "2024-04-09T20:27:11.117Z",
+      "version": 1767590750900,
+      "is_deleted": false,
+      "present_at_all_locations": true,
+      "item_data": {
+        "name": "Dual Membership",
+        "is_taxable": true,
+        "variations": [
+          {
+            "type": "ITEM_VARIATION",
+            "id": "AXBFUDZPXV5YNTITGKVNYMEE",
+            "updated_at": "2026-01-05T05:25:50.9Z",
+            "created_at": "2024-04-09T20:27:11.117Z",
+            "version": 1767590750900,
+            "is_deleted": false,
+            "present_at_all_locations": true,
+            "item_variation_data": {
+              "item_id": "HE37XJ7A5V77AF4UXTZDYZKJ",
+              "name": "Regular",
+              "ordinal": 1,
+              "pricing_type": "FIXED_PRICING",
+              "price_money": {
+                "amount": 20000,
+                "currency": "USD"
+              },
+              "sellable": true,
+              "stockable": true
+            }
+          }
+        ],
+        "product_type": "REGULAR",
+        "skip_modifier_screen": false,
+        "ecom_available": false,
+        "image_ids": [
+          "JPDVW3CTRIZLUCVUJEIADOAY"
+        ],
+        "categories": [
+          {
+            "id": "U7Z27ZAFTNJFOPMLVO3FWXGZ",
+            "ordinal": 33554432
+          }
+        ],
+        "is_archived": false,
+        "reporting_category": {
+          "id": "U7Z27ZAFTNJFOPMLVO3FWXGZ",
+          "ordinal": 33554432
+        }
+      }
+    },
+    {
+      "type": "ITEM",
+      "id": "VORJGFMP5M2NMMENCLCM3YN7",
+      "updated_at": "2026-01-05T05:14:23.683Z",
+      "created_at": "2025-12-31T07:27:35.634Z",
+      "version": 1767590063683,
+      "is_deleted": false,
+      "present_at_all_locations": true,
+      "item_data": {
+        "name": "General Admission",
+        "is_taxable": true,
+        "variations": [
+          {
+            "type": "ITEM_VARIATION",
+            "id": "J4RJX6N3O2XP6DFH5QCN63Y2",
+            "updated_at": "2025-12-31T07:39:09.941Z",
+            "created_at": "2025-12-31T07:27:35.634Z",
+            "version": 1767166749941,
+            "is_deleted": false,
+            "present_at_all_locations": true,
+            "item_variation_data": {
+              "item_id": "VORJGFMP5M2NMMENCLCM3YN7",
+              "name": "Regular",
+              "ordinal": 1,
+              "pricing_type": "FIXED_PRICING",
+              "price_money": {
+                "amount": 2000,
+                "currency": "USD"
+              },
+              "track_inventory": false,
+              "sellable": true,
+              "stockable": true
+            }
+          }
+        ],
+        "product_type": "REGULAR",
+        "skip_modifier_screen": false,
+        "image_ids": [
+          "U3FORNS2HODTU6XLBL4KYHFW"
+        ],
+        "categories": [
+          {
+            "id": "3NMR3OP3QQMLKLFLLGGJMUVC",
+            "ordinal": -2251799796908032
+          }
+        ],
+        "is_archived": false,
+        "reporting_category": {
+          "id": "3NMR3OP3QQMLKLFLLGGJMUVC",
+          "ordinal": -2251799796908032
+        }
+      }
+    }
+  ],
+  "latest_time": "2026-01-05T05:25:50.9Z"
+}

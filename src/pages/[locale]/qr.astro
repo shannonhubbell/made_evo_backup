@@ -1,0 +1,16 @@
+---
+import { getQrCodeParams, generateQrCodeSvg } from "../../lib/qrcode";
+
+// Always server-rendered so the QR code reflects the request's query params
+export const prerender = false;
+
+const params = getQrCodeParams(Astro.url.searchParams);
+const svg = generateQrCodeSvg(params);
+
+return new Response(svg, {
+  headers: {
+    "Content-Type": "image/svg+xml",
+    "Cache-Control": "public, max-age=3600",
+  },
+});
+---

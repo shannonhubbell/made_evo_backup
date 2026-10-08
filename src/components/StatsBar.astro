@@ -1,0 +1,81 @@
+---
+export interface StatCard {
+  label: string;
+  value: string | number;
+  trend?: {
+    direction: 'up' | 'down';
+    percentage: number;
+  };
+  icon?: string;
+  highestCategory?: string;
+  largestCategory?: string;
+  inverted?: boolean;
+}
+
+export interface StatsBarProps {
+  stats: StatCard[];
+}
+
+const { stats } = Astro.props;
+---
+
+<div class="w-full">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+    {stats.map((stat: StatCard) => (
+      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+        <!-- Stat Header -->
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            {stat.icon && (
+              <div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={stat.icon} />
+                </svg>
+              </div>
+            )}
+            <div>
+              <p class="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                {stat.label}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stat Value -->
+        <div class="mb-4">
+          <p class="text-3xl font-bold text-gray-900 dark:text-white">
+            {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
+          </p>
+          {stat.largestCategory && (
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {stat.inverted ? `Categories Except ${stat.largestCategory}` : `Largest Category: ${stat.largestCategory}`}
+            </p>
+          )}
+        </div>
+
+        <!-- Trend Indicator -->
+        {stat.trend && (
+          <div class="flex items-center gap-2">
+            {stat.trend.direction === 'up' ? (
+              <div class="flex items-center gap-1 text-green-600 dark:text-green-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+                <span class="text-sm font-semibold">+{stat.trend.percentage.toFixed(1)}%</span>
+              </div>
+            ) : (
+              <div class="flex items-center gap-1 text-red-600 dark:text-red-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+                <span class="text-sm font-semibold">{stat.trend.percentage.toFixed(1)}%</span>
+              </div>
+            )}
+            <span class="text-xs text-gray-500 dark:text-gray-400">vs last period</span>
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+</div>
+

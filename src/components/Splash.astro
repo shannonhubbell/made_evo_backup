@@ -1,0 +1,241 @@
+---
+import { SplashPropsSchema } from "../schema/ui";
+import type z from "zod";
+import cx from "classnames";
+import ImageResponsive from "./ImageResponsive.astro";
+
+export interface SplashProps extends z.infer<typeof SplashPropsSchema> {
+  /** When true, add top padding equal to navbar height (use when this is the first element on the page) */
+  isFirstInContainer?: boolean;
+}
+
+const props = Astro.props as SplashProps;
+const { contents, padding = "md", isFirstInContainer } = props;
+const autoPlay = props.autoPlay !== false ? true : false;
+const isGallery = contents.length > 1;
+const DEFAULT_ACCENT_COLOR = "#7FCC37";
+
+// Astro's frontmatter script is compiled as plain TypeScript (not JSX), so a
+// helper here can only return plain values like a class string - not markup.
+// The <a> itself is rendered inline in the template below, matching the
+// pattern used by MiniSplash.astro / SingleColumn.astro / Event.astro.
+function ctaClasses(style: "light" | "dark", alignSelf: boolean): string {
+  const base =
+    "mt-4 inline-flex items-center gap-2 rounded-full px-6 py-3 uppercase font-bold shadow-md hover:shadow-lg transition-all";
+  const colors =
+    style === "light"
+      ? "bg-white text-neutral-900 hover:bg-neutral-100"
+      : "bg-blue-500 text-white hover:bg-blue-600";
+  return [base, colors, alignSelf ? "self-end" : ""].filter(Boolean).join(" ");
+}
+
+const paddingClasses = {
+  sm: "p-0",
+  md: "p-0",
+  lg: "p-0",
+};
+---
+
+<>
+  <div
+    class={cx("splash", {"splash--hasMultiple": isGallery})}
+    style={isFirstInContainer ? "--splash-top-space: calc(4.5rem + var(--alert-height))" : undefined}
+  >
+    {
+      contents.map((content, index) => {
+        const {
+          videoSrc,
+          videoPoster,
+          title = "Title Here",
+          subtitle = "Subtitle Here",
+          accentColor = DEFAULT_ACCENT_COLOR,
+          callToAction,
+        } = content;
+
+        const hasVideo = !!videoSrc;
+        const hasPoster = !!videoPoster;
+        const hasMedia = hasVideo || hasPoster;
+        const displayClasses = index === 0 ? "" : "hidden";
+
+        return (
+          <div
+            class={cx("splash__item", displayClasses, {"splash__item--hasMedia": hasMedia})}
+            data-splash-index={index}
+            role="region"
+          >
+            {hasMedia && (
+              <div class="splash__media">
+                {hasVideo ? (
+                  <video
+                    class="absolute inset-0 w-full h-full object-cover"
+                    autoplay
+                    muted
+                    loop
+                    playsinline
+                    poster={videoPoster}
+                  >
+                    <source src={videoSrc} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <ImageResponsive
+                    src={videoPoster!}
+                    alt=""
+                    class="absolute inset-0 w-full h-full object-cover"
+                  />
+                )}
+              </div>
+            )}
+            <div class="splash__info">
+              <h5 class="splash__subtitle">{subtitle}</h5>
+              <h1 class="splash__title ui-h1">{title}</h1>
+              {callToAction && isGallery && (
+                <a
+                  href={callToAction.url}
+                  target={
+                    callToAction.url?.startsWith("http") ? "_blank" : undefined
+                  }
+                  rel={
+                    callToAction.url?.startsWith("http")
+                      ? "noopener noreferrer"
+                      : undefined
+                  }
+                  class={ctaClasses("light", true)}
+                >
+                  {callToAction.title}
+                  <span aria-hidden="true">&rarr;</span>
+                </a>
+              )}
+            </div>
+          </div>
+        );
+      })
+    }
+    {
+      isGallery && (
+        <nav class="splash__nav" aria-label="Carousel navigation">
+          {contents.map((_, index) => (
+            <button
+              class={cx("splash__dot", { "splash__dot--active": index === 0 })}
+              data-index={index}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </nav>
+      )
+    }
+  </div>
+
+  <script is:inline define:vars={{ autoPlay: autoPlay }}>
+    (function () {
+      let autoPlayInterval = null;
+      let isInitialized = false;
+
+      function initGallery() {
+        const gallery = document.querySelector(".splash");
+        if (!gallery) return;
+
+        const items = gallery.querySelectorAll(".splash__item");
+        const dots = gallery.querySelectorAll(".splash__dot");
+        console.log(dots);
+        if (items.length === 0) return;
+
+        // Prevent multiple initializations
+        if (isInitialized) return;
+        isInitialized = true;
+
+        // Clear any existing interval
+        if (autoPlayInterval !== null) {
+          clearInterval(autoPlayInterval);
+          autoPlayInterval = null;
+        }
+
+        let currentIndex = 0;
+
+        function showSlide(index) {
+          // Show the active item, hide the rest
+          items.forEach((item, i) => {
+            if (i === index) {
+              item.classList.remove("hidden");
+            } else {
+              item.classList.add("hidden");
+            }
+          });
+
+          // Update dots if they exist
+          if (dots.length > 0) {
+            dots.forEach((dot, i) => {
+              if (i === index) {
+                dot.classList.add("splash__dot--active");
+              } else {
+                dot.classList.remove("splash__dot--active");
+              }
+            });
+          }
+
+          currentIndex = index;
+        }
+
+        function nextSlide() {
+          showSlide((currentIndex + 1) % items.length);
+        }
+
+        // Add click handlers to dots if they exist
+        if (dots.length > 0) {
+          dots.forEach((dot, index) => {
+            dot.addEventListener("click", function (e) {
+              e.preventDefault();
+              // Clear auto-play when user manually navigates
+              if (autoPlayInterval !== null) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+              }
+              showSlide(index);
+            });
+          });
+        }
+
+        // Start auto-play if enabled
+        // Default to true unless explicitly set to false
+        // When passed via define:vars, booleans are serialized, so we need to check multiple formats
+        const isExplicitlyFalse =
+          autoPlay === false ||
+          autoPlay === "false" ||
+          String(autoPlay).toLowerCase() === "false" ||
+          autoPlay === 0;
+        const shouldAutoPlay = !isExplicitlyFalse;
+        console.log("========> should auto play", shouldAutoPlay);
+
+        if (shouldAutoPlay && items.length > 1) {
+          // Switch slides every 5 seconds
+          autoPlayInterval = setInterval(nextSlide, 5000);
+        }
+      }
+
+      // Wait for DOM to be ready and ensure elements exist
+      function tryInit() {
+        const gallery = document.querySelector(".splash");
+        const items = gallery
+          ? gallery.querySelectorAll("[data-splash-index]")
+          : [];
+
+        if (gallery && items.length > 0) {
+          initGallery();
+        } else {
+          // Retry after a short delay if elements aren't ready yet
+          setTimeout(tryInit, 50);
+        }
+      }
+
+      // Use requestAnimationFrame to ensure DOM is fully rendered
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => {
+          requestAnimationFrame(tryInit);
+        });
+      } else {
+        // DOM is already ready, but elements might not be rendered yet
+        requestAnimationFrame(tryInit);
+      }
+    })();
+  </script>
+</>

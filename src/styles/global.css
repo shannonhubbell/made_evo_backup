@@ -1,0 +1,210 @@
+@config "../../tailwind.config.ts";
+@import "tailwindcss";
+@import "flowbite/src/themes/default";
+@import "./splash.css";
+
+@plugin "flowbite/plugin";
+/* @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *)); */
+
+/* Canonical Tailwind layer order — later layers win. Applies to ALL
+   stylesheets (layers are document-global), so component files like
+   splash.css inherit this and don't need their own order statement.
+   Order matters: utilities (e.g. `hidden`) must outrank components,
+   which must outrank base. */
+@layer theme, base, components, utilities;
+
+/* Runtime state (not a design token, so it lives outside @theme): the current
+   rendered height of the site-wide Alert banner (Alert.astro), kept in sync via a
+   small script there. Defaults to 0 so pages render correctly with no JS, no active
+   alert, or before the measurement script runs. Consumed by the first-widget-on-a-page
+   top spacing (see Splash.astro / SingleColumn.astro's isFirstInContainer handling) so
+   the page title always clears the alert without needing a hardcoded pixel guess that
+   would break whenever the alert's text is long enough to wrap differently. */
+:root {
+  --alert-height: 0px;
+}
+
+/* Neutral Theme - No Warmth or Coolness */
+@theme {
+  /* Neutral Grayscale Palette */
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-300: #d4d4d4;
+  --color-neutral-400: #a3a3a3;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-neutral-900: #171717;
+  --color-neutral-950: #0a0a0a;
+
+  /* Primary colors (neutral grays) */
+  --color-primary-50: var(--color-neutral-50);
+  --color-primary-100: var(--color-neutral-100);
+  --color-primary-200: var(--color-neutral-200);
+  --color-primary-300: var(--color-neutral-300);
+  --color-primary-400: var(--color-neutral-400);
+  --color-primary-500: var(--color-neutral-500);
+  --color-primary-600: var(--color-neutral-600);
+  --color-primary-700: var(--color-neutral-700);
+  --color-primary-800: var(--color-neutral-800);
+  --color-primary-900: var(--color-neutral-900);
+  --color-primary-950: var(--color-neutral-950);
+
+  /* Override default colors to use neutral palette */
+  --color-gray-50: var(--color-neutral-50);
+  --color-gray-100: var(--color-neutral-100);
+  --color-gray-200: var(--color-neutral-200);
+  --color-gray-300: var(--color-neutral-300);
+  --color-gray-400: var(--color-neutral-400);
+  --color-gray-500: var(--color-neutral-500);
+  --color-gray-600: var(--color-neutral-600);
+  --color-gray-700: var(--color-neutral-700);
+  --color-gray-800: var(--color-neutral-800);
+  --color-gray-900: var(--color-neutral-900);
+  --color-gray-950: var(--color-neutral-950);
+
+  /* Background colors */
+  --color-background: var(--color-neutral-50);
+  --color-background-dark: var(--color-neutral-900);
+  
+  /* Surface colors */
+  --color-surface: var(--color-neutral-100);
+  --color-surface-dark: var(--color-neutral-800);
+  
+  /* Text colors */
+  --color-text: var(--color-neutral-900);
+  --color-text-dark: var(--color-neutral-50);
+  --color-text-muted: var(--color-neutral-600);
+  --color-text-muted-dark: var(--color-neutral-400);
+  
+  /* Border colors */
+  --color-border: var(--color-neutral-200);
+  --color-border-dark: var(--color-neutral-700);
+}
+
+[data-theme="dark"] {
+  --color-background: var(--color-background-dark);
+  --color-surface: var(--color-neutral-900);
+  --color-text: var(--color-neutral-50);
+  --color-text-muted: var(--color-neutral-400);
+  --color-border: var(--color-neutral-800);
+}
+
+/* System theme: use dark background when no explicit light preference */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-background: var(--color-background-dark);
+    --color-surface: var(--color-neutral-900);
+    --color-text: var(--color-neutral-50);
+    --color-text-muted: var(--color-neutral-400);
+    --color-border: var(--color-neutral-800);
+  }
+}
+
+/* Apply Rubik font to all text elements */
+* {
+  font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+/* Make all headers uppercase */
+h1, h2, h3, h4, h5, h6 {
+}
+
+/* Dark mode system preference detection */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* Theme classes for manual control */
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* Theme transition */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* UI Headers - For components, cards, modals, etc. */
+.ui-h1 {
+  @apply text-5xl md:text-7xl lg:text-8xl font-black tracking-tight;
+  text-transform: uppercase;
+}
+
+.ui-h2 {
+  @apply text-3xl md:text-4xl lg:text-5xl font-black tracking-tight;
+  text-transform: uppercase;
+}
+
+.ui-h3 {
+  @apply text-2xl md:text-3xl lg:text-4xl font-black;
+  text-transform: uppercase;
+}
+
+.ui-h4 {
+  @apply text-xl md:text-2xl lg:text-3xl font-black;
+  text-transform: uppercase;
+}
+
+.ui-h5 {
+  @apply text-lg md:text-xl lg:text-2xl font-medium;
+  text-transform: uppercase;
+}
+
+.ui-h6 {
+  @apply text-base md:text-lg lg:text-xl font-medium;
+  text-transform: uppercase;
+}
+
+/* Content Headers - For blog posts, articles, long-form content */
+.content-h1 {
+  @apply text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight mb-6;
+}
+
+.content-h2 {
+  @apply text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight leading-tight mb-5;
+}
+
+.content-h3 {
+  @apply text-xl md:text-2xl lg:text-3xl font-semibold leading-tight mb-4;
+}
+
+.content-h4 {
+  @apply text-lg md:text-xl lg:text-2xl font-medium leading-tight mb-3;
+}
+
+.content-h5 {
+  @apply text-base md:text-lg lg:text-xl font-medium leading-tight mb-2;
+}
+
+.content-h6 {
+  @apply text-sm md:text-base lg:text-lg font-medium leading-tight mb-2;
+}
+
+.content-wrapper h1 {
+  @apply text-2xl md:text-4xl lg:text-5xl font-bold leading-tight mb-4;
+}
+
+.content-wrapper h2 {
+  @apply text-xl md:text-xl lg:text-xl font-bold leading-tight mb-4;
+}
+
+.content-wrapper p {
+  margin-top: 1rem !important;
+  margin-bottom: 1rem !important;
+  color: rgb(55 65 81) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .content-wrapper p {
+    color: rgb(209 213 219) !important;
+  }
+}

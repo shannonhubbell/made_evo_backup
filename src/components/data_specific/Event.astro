@@ -1,0 +1,206 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import ImageResponsive from "../ImageResponsive.astro";
+import { getEventBySlug, getEventsPaginated, getAllEvents } from "../../lib/contentful";
+import { documentToHtmlString } from "@contentful/rich-text-html-renderer";
+import { prependBase, formatEventDate, formatEventTime } from "../../lib/helpers";
+import "../../styles/global.css";
+
+/** MADE operates out of a single venue, so this is used as the location for every event. */
+const VENUE_ADDRESS = "921 Washington Street, Oakland, CA 94607";
+
+interface Props {
+    slug?: string;
+    prevSlug?: string | null;
+    nextSlug?: string | null;
+    prevTitle?: string | null;
+    nextTitle?: string | null;
+}
+
+const {
+    slug,
+    prevSlug,
+    nextSlug,
+    prevTitle,
+    nextTitle
+} = Astro.props as Props;
+
+interface EventDetail {
+    title: string;
+    description?: string;
+    imageUrl?: string;
+    contentHtml: string;
+    callToAction?: { title: string; url: string };
+    startDate?: string;
+    endDate?: string;
+}
+
+let eventDetail: EventDetail | null = null;
+
+let navigationData: {
+    prevSlug: string | null;
+    nextSlug: string | null;
+    prevTitle: string | null;
+    nextTitle: string | null;
+} = {
+    prevSlug: prevSlug || null,
+    nextSlug: nextSlug || null,
+    prevTitle: prevTitle || null,
+    nextTitle: nextTitle || null
+};
+
+function buildEventDetail(event: any): EventDetail {
+    return {
+        title: event.title,
+        description: event.description || undefined,
+        // The imported image is Eventbrite's wide banner image (not a cropped square) -
+        // rendered full-width below as a hero image.
+        imageUrl: event.imageCollection?.items?.[0]?.url || undefined,
+        contentHtml: documentToHtmlString(event.content?.json || { nodeType: 'document', data: {}, content: [] }),
+        callToAction: event.callToAction?.title && event.callToAction?.url
+            ? { title: event.callToAction.title, url: event.callToAction.url }
+            : undefined,
+        startDate: event.startDate,
+        endDate: event.endDate,
+    };
+}
+
+if (slug !== undefined) {
+    // Fetch event by slug
+    const event = await getEventBySlug(slug);
+
+    if (event !== null) {
+        eventDetail = buildEventDetail(event);
+    }
+} else {
+    // No slug provided - fetch the first event
+    const firstEvent = await getEventsPaginated(1, 1);
+
+    if (firstEvent.length > 0) {
+        const event = firstEvent[0];
+        eventDetail = buildEventDetail(event);
+
+        // Calculate navigation for the first event
+        const allEvents = await getAllEvents();
+        if (allEvents.length > 1) {
+            const currentIndex = allEvents.findIndex((e: { slug: string }) => e.slug === event.slug);
+
+            if (currentIndex >= 0) {
+                const prevEvent = currentIndex < allEvents.length - 1 ? allEvents[currentIndex + 1] : null;
+                const nextEvent = currentIndex > 0 ? allEvents[currentIndex - 1] : null;
+
+                navigationData = {
+                    prevSlug: prevEvent?.slug || null,
+                    nextSlug: nextEvent?.slug || null,
+                    prevTitle: prevEvent?.title || null,
+                    nextTitle: nextEvent?.title || null
+                };
+            }
+        }
+    }
+}
+
+const eventDateLabel = eventDetail ? formatEventDate(eventDetail.startDate) : null;
+const eventTimeLabel = eventDetail ? formatEventTime(eventDetail.startDate, eventDetail.endDate) : null;
+---
+
+<Layout title={eventDetail?.title} description={eventDetail?.description} image={eventDetail?.imageUrl} type="article">
+    <div class="lg:container mx-auto px-4 py-8 mt-20">
+        {eventDetail ? (
+            <article>
+                <div class="w-full aspect-[16/9] md:aspect-[21/9] rounded-xl overflow-hidden mb-6 relative">
+                    {eventDetail.imageUrl ? (
+                        <ImageResponsive
+                            src={eventDetail.imageUrl}
+                            alt={eventDetail.title}
+                            class="absolute inset-0 w-full h-full object-cover"
+                        />
+                    ) : (
+                        <div class="absolute inset-0 bg-neutral-300 dark:bg-neutral-600" />
+                    )}
+                </div>
+
+                <h1 class="ui-h2 mb-4 text-gray-900 dark:text-white">{eventDetail.title}</h1>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 p-4 sm:p-6 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                    {eventDateLabel && (
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 mt-0.5 shrink-0 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <div>
+                                <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Date</div>
+                                <div class="font-bold text-gray-900 dark:text-white">{eventDateLabel}</div>
+                            </div>
+                        </div>
+                    )}
+                    {eventTimeLabel && (
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 mt-0.5 shrink-0 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div>
+                                <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Time</div>
+                                <div class="font-bold text-gray-900 dark:text-white">{eventTimeLabel}</div>
+                            </div>
+                        </div>
+                    )}
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 mt-0.5 shrink-0 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <div>
+                            <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Location</div>
+                            <div class="font-bold text-gray-900 dark:text-white">{VENUE_ADDRESS}</div>
+                        </div>
+                    </div>
+                </div>
+
+                {eventDetail.callToAction && (
+                    <a
+                        href={eventDetail.callToAction.url}
+                        target={eventDetail.callToAction.url.startsWith('http') ? '_blank' : undefined}
+                        rel={eventDetail.callToAction.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+                        class="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full mb-6 uppercase font-bold shadow-md hover:shadow-lg transition-all"
+                    >
+                        {eventDetail.callToAction.title}
+                        <span aria-hidden="true">&rarr;</span>
+                    </a>
+                )}
+
+                <div class="content-wrapper" set:html={eventDetail.contentHtml} />
+            </article>
+        ) : (
+            <p class="text-gray-500 dark:text-gray-400">No event found.</p>
+        )}
+
+        {(navigationData.prevSlug || navigationData.nextSlug) && (
+            <nav class="flex justify-between items-center gap-4 mt-12 pt-8 border-t border-gray-300 dark:border-gray-700" aria-label="Event navigation">
+                {navigationData.prevSlug ? (
+                    <a
+                        href={prependBase(`/events/${navigationData.prevSlug}`, Astro.locals.locale || 'en-US')}
+                        class="flex flex-col px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-1 max-w-[48%]"
+                    >
+                        <span class="text-sm text-gray-600 dark:text-gray-400 mb-1">Previous Event</span>
+                        <span class="font-bold text-gray-900 dark:text-white">{navigationData.prevTitle}</span>
+                    </a>
+                ) : (
+                    <div class="flex-1 max-w-[48%]"></div>
+                )}
+
+                {navigationData.nextSlug ? (
+                    <a
+                        href={prependBase(`/events/${navigationData.nextSlug}`, Astro.locals.locale || 'en-US')}
+                        class="flex flex-col px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-1 max-w-[48%] text-right ml-auto"
+                    >
+                        <span class="text-sm text-gray-600 dark:text-gray-400 mb-1">Next Event</span>
+                        <span class="font-bold text-gray-900 dark:text-white">{navigationData.nextTitle}</span>
+                    </a>
+                ) : (
+                    <div class="flex-1 max-w-[48%]"></div>
+                )}
+            </nav>
+        )}
+    </div>
+</Layout>

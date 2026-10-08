@@ -1,0 +1,27 @@
+---
+import type { GridItem } from '../schema/ui';
+
+export interface Props {
+  items: GridItem[];
+}
+
+const { items } = Astro.props;
+
+// CSS class variables - Consolidated color system
+const gridContainerClasses = "w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-4";
+const cardLinkClasses = "group relative w-full transition-shadow duration-300";
+const contentContainerClasses = "inset-0 flex flex-col justify-between z-10 pb-5";
+
+---
+<div class={gridContainerClasses}>
+  {items.map((item) => (
+    <div class={cardLinkClasses}>
+        <!-- Overlaid Event Content -->
+        <div class={contentContainerClasses}>
+            <h1 class="font-bold">{ item.title }</h1>
+            { item.subtitle && <p class="font-normal normal-case">{ item.subtitle }</p> }
+        </div>
+    </div>
+  ))}
+</div>
+

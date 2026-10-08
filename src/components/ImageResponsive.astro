@@ -1,0 +1,132 @@
+---
+import { optimizeImageUrl } from "../lib/images";
+
+export interface Props {
+  src: string;
+  alt?: string;
+  class?: string;
+  quality?: number;
+  format?: 'webp' | 'jpg' | 'png' | 'auto';
+  height?: number;
+}
+
+const { 
+  src,
+  alt = "",
+  class: className = "",
+  quality = 75,
+  format = 'webp',
+  height
+} = Astro.props;
+
+// Default optimized URL with 1200px width (fallback for no-JS)
+const defaultOptimizedUrl = optimizeImageUrl(src, { quality, width: 1200, format, height });
+---
+
+<img 
+  src={defaultOptimizedUrl}
+  alt={alt}
+  class={className}
+  data-original-src={src}
+  data-quality={quality}
+  data-format={format}
+  data-height={height || ''}
+/>
+
+<script>
+  (function() {
+    // Get all responsive images on the page
+    const images = document.querySelectorAll('img[data-original-src]');
+    
+    function optimizeImageForContainer(img: HTMLImageElement, containerWidth: number, containerHeight?: number) {
+      const originalSrc = img.getAttribute('data-original-src');
+      if (!originalSrc) return;
+      
+      const quality = img.getAttribute('data-quality') || '75';
+      const format = img.getAttribute('data-format') || 'webp';
+      const heightAttr = img.getAttribute('data-height');
+      
+      // Calculate dimensions based on container size
+      // Use device pixel ratio for retina displays, but cap at 2x
+      const devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+      const width = Math.ceil(containerWidth * devicePixelRatio);
+      const height = heightAttr ? parseInt(heightAttr, 10) : (containerHeight ? Math.ceil(containerHeight * devicePixelRatio) : 0);
+      
+      // Use the larger dimension for optimization (query by height when taller, width when wider)
+      const useHeight = height > 0 && height > width;
+      
+      // Build query parameters
+      const params = new URLSearchParams();
+      params.set('q', quality);
+      if (useHeight) {
+        params.set('h', height.toString());
+      } else {
+        params.set('w', width.toString());
+      }
+      params.set('fm', format);
+      
+      // Append to URL
+      let optimizedUrl: string;
+      if (originalSrc.startsWith('http://') || originalSrc.startsWith('https://')) {
+        try {
+          const urlObj = new URL(originalSrc);
+          params.forEach((value, key) => {
+            urlObj.searchParams.set(key, value);
+          });
+          optimizedUrl = urlObj.toString();
+        } catch (e) {
+          const separator = originalSrc.includes('?') ? '&' : '?';
+          optimizedUrl = `${originalSrc}${separator}${params.toString()}`;
+        }
+      } else {
+        const separator = originalSrc.includes('?') ? '&' : '?';
+        optimizedUrl = `${originalSrc}${separator}${params.toString()}`;
+      }
+      
+      // Update image src
+      img.src = optimizedUrl;
+    }
+    
+    // Set up ResizeObserver for each image to watch its parent container
+    images.forEach((img) => {
+      const imageElement = img as HTMLImageElement;
+      const parentElement = imageElement.parentElement;
+      
+      if (!parentElement) {
+        // Fallback to viewport dimensions if no parent
+        optimizeImageForContainer(imageElement, window.innerWidth, window.innerHeight);
+        return;
+      }
+      
+      // Initial optimization based on current parent size
+      const rect = parentElement.getBoundingClientRect();
+      const initialWidth = parentElement.clientWidth || rect.width;
+      const initialHeight = parentElement.clientHeight || rect.height;
+      if (initialWidth > 0) {
+        optimizeImageForContainer(imageElement, initialWidth, initialHeight);
+      }
+      
+      // Watch for parent container size changes
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const { width: containerWidth, height: containerHeight } = entry.contentRect;
+          if (containerWidth > 0) {
+            optimizeImageForContainer(imageElement, containerWidth, containerHeight);
+          }
+        }
+      });
+      
+      resizeObserver.observe(parentElement);
+      
+      // Clean up observer when image is removed from DOM
+      const cleanupObserver = new MutationObserver(() => {
+        if (!document.contains(imageElement)) {
+          resizeObserver.disconnect();
+          cleanupObserver.disconnect();
+        }
+      });
+      cleanupObserver.observe(document.body, { childList: true, subtree: true });
+    });
+  })();
+</script>
+

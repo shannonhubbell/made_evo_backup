@@ -1,0 +1,62 @@
+---
+import VideoGame from "../../../components/data_specific/VideoGame.astro";
+import { getVideoGameBySlug, getVideoGamesPaginated, getVideoGamesCount } from "../../../lib/contentful";
+import { isValidLocale, getDefaultLocale, normalizeLocaleCode } from "../../../lib/contentful/locales";
+
+export const prerender = false;
+
+const { locale: localeParam, slug } = Astro.params;
+
+let locale = localeParam || 'en-US';
+
+if (!locale.includes('-')) {
+  locale = await normalizeLocaleCode(locale);
+}
+
+const isValid = await isValidLocale(locale);
+if (!isValid) {
+  const defaultLocale = await getDefaultLocale();
+  const defaultLocaleShort = defaultLocale.split('-')[0];
+  return Astro.redirect(`/${defaultLocaleShort}/video_game/${slug}`, 302);
+}
+
+let prevSlug: string | null = null;
+let nextSlug: string | null = null;
+let prevTitle: string | null = null;
+let nextTitle: string | null = null;
+
+if (slug) {
+  try {
+    const game = await getVideoGameBySlug(slug, locale);
+    if (!game) {
+      return Astro.redirect('/404', 404);
+    }
+
+    const totalGames = await getVideoGamesCount();
+    const allGames = await getVideoGamesPaginated(1, totalGames);
+
+    const currentIndex = allGames.findIndex((g: { slug?: string }) => g.slug === slug);
+    const prevGame = currentIndex < allGames.length - 1 ? allGames[currentIndex + 1] : null;
+    const nextGame = currentIndex > 0 ? allGames[currentIndex - 1] : null;
+
+    prevSlug = prevGame?.slug ?? null;
+    nextSlug = nextGame?.slug ?? null;
+    prevTitle = prevGame?.title ?? null;
+    nextTitle = nextGame?.title ?? null;
+  } catch (error) {
+    console.error(`Error fetching video game "${slug}":`, error);
+    return Astro.redirect('/404', 404);
+  }
+}
+
+Astro.locals.locale = locale;
+---
+
+<VideoGame
+  slug={slug}
+  locale={locale}
+  prevSlug={prevSlug}
+  nextSlug={nextSlug}
+  prevTitle={prevTitle}
+  nextTitle={nextTitle}
+/>

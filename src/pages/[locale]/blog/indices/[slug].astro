@@ -1,0 +1,33 @@
+---
+// Blog pagination - e.g. /en/blog/indices/2
+import PostList from "../../../../components/data_specific/PostList.astro";
+import { isValidLocale, getDefaultLocale, normalizeLocaleCode } from "../../../../lib/contentful/locales";
+
+export const prerender = false;
+
+const { locale: localeParam, slug } = Astro.params;
+
+let locale = localeParam || 'en-US';
+if (!locale.includes('-')) {
+  locale = await normalizeLocaleCode(locale);
+}
+
+const isValid = await isValidLocale(locale);
+if (!isValid) {
+  const defaultLocale = await getDefaultLocale();
+  const defaultLocaleShort = defaultLocale.split('-')[0];
+  return Astro.redirect(`/${defaultLocaleShort}/blog/indices/${slug}`, 302);
+}
+
+// Parse page number from slug
+const currentPage = slug ? parseInt(slug, 10) : 1;
+
+if (isNaN(currentPage) || currentPage < 1) {
+  return Astro.redirect('/404', 404);
+}
+
+Astro.locals.locale = locale;
+
+const POSTS_PER_PAGE = 10;
+---
+<PostList page={currentPage} postsPerPage={POSTS_PER_PAGE} />

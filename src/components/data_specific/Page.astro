@@ -1,0 +1,251 @@
+---
+
+import Splash from "../../components/Splash.astro";
+import Layout from "../../layouts/Layout.astro";
+import { getAdapterDataByType, getPageBySlug } from "../../lib/contentful";
+import { prependBase } from "../../lib/helpers";
+import "../../styles/global.css";
+import ResponsiveGrid from "../ResponsiveGrid.astro";
+import CategorizedCatalog from "../CategorizedCatalog.astro";
+import DoubleColumn from "../DoubleColumn.astro";
+import TextGrid from "../TextGrid.astro";
+import VerticalTimeline from "../VerticalTimeline.astro";
+import Calendar from "../Calendar.astro";
+import Report from "../Report.astro";
+import SingleColumn from "../SingleColumn.astro";
+import MiniSplash from "../MiniSplash.astro";
+import ImageMarquee from "../ImageMarquee.astro";
+import Store from "../Store.astro";
+import GoogleFormLoader from "../hydrated/forms/GoogleFormLoader.vue";
+import type { ContentView, Page } from "../../generated/contentful-types";
+import type { WidgetData } from "../../schema/ui/widget-data";
+import { validateWidgetDataForRendering, getErrorComponent, WidgetTypeMismatchError } from "../../lib/components/renderer";
+import { isValidWidgetType, type WidgetType } from "../../lib/components/component-map";
+import { resolvePageMeta } from "../../lib/seo";
+
+
+const {
+    slug
+} = Astro.props;
+
+let items: {
+    type: WidgetType;
+    title: string;
+    isTitleVisible: boolean;
+    options: Map<string, string>;
+    data: WidgetData;
+}[] = [];
+
+let page: Page | null = null;
+
+if (slug !== undefined) {
+    // Get locale from middleware (set in src/middleware.ts or route files)
+    const locale = Astro.locals.locale || 'en-US';
+
+    console.log(`[Page.astro] Fetching page with slug: "${slug}"${locale ? ` in locale "${locale}"` : ''}`);
+    page = await getPageBySlug(slug, locale);
+
+    if (!page) {
+        console.warn(`[Page.astro] Page not found for slug: "${slug}"`);
+    } else {
+        console.log(`[Page.astro] Page found:`, {
+            id: page.sys.id,
+            title: page.title,
+            hasContentViewCollection: !!page.contentViewCollection,
+            contentViewCount: page.contentViewCollection?.items?.length || 0
+        });
+    }
+
+    if (page && page.contentViewCollection?.items) {
+        const contentViews = page.contentViewCollection.items;
+        console.log(`[Page.astro] Processing ${contentViews.length} content views`);
+        items = await Promise.all(contentViews.map(async (item: ContentView, index: number) => {
+            console.log(`[Page.astro] Processing content view ${index + 1}/${contentViews.length}:`, {
+                type: item.type,
+                title: item.title,
+                adapterName: (item.dataAdapter as any)?.name,
+                adapterId: item.dataAdapter?.sys?.id
+            });
+        // Store widgets don't need adapters - they're static components
+        let adapterData: WidgetData;
+        if (item.type === 'store') {
+            adapterData = { type: 'store' };
+        } else {
+            try {
+                adapterData = await getAdapterDataByType(
+                    {
+                        name: (item.dataAdapter as any)?.name,
+                        sys: { id: item.dataAdapter?.sys?.id ?? '' }
+                    },
+                    item.keys || [],
+                    item.values || [],
+                    (item.targetCollection?.items ?? [])
+                        .map((targetItem: { sys?: { id?: string } }) => targetItem?.sys?.id)
+                        .filter((id): id is string => id != null) || []
+                );
+                console.log(`[Page.astro] Adapter data fetched for ${item.type}:`, {
+                    widgetType: item.type,
+                    hasItems: !!(adapterData as any)?.items,
+                    itemsCount: (adapterData as any)?.items?.length || 0,
+                    dataKeys: Object.keys(adapterData)
+                });
+            } catch (error) {
+                console.error(`[Page.astro] Error fetching adapter data for ${item.type}:`, error);
+                throw error; // Re-throw to be caught by outer try-catch
+            }
+        }
+
+        return {
+            type: item.type as WidgetType,
+            options: item.keys && item.keys.length > 0 ?
+            new Map(item.keys.map((key, index) => [key, (item.values || [])[index] || ''])) : new Map(),
+            title: item.title || '',
+            isTitleVisible: item.isTitleVisible,
+            data: adapterData,
+        }
+        }));
+        console.log(`[Page.astro] Successfully processed ${items.length} items for page "${slug}"`);
+    } else if (page) {
+        console.warn(`[Page.astro] Page found but has no contentViewCollection items for slug: "${slug}"`);
+    }
+}
+
+// CSS class variables
+const containerClasses = "lg:container mx-auto px-4 py-8";
+const titleClasses = "ui-h2 mb-4 text-gray-900 dark:text-white";
+const descriptionClasses = "text-lg text-gray-500 dark:text-gray-400 mb-6";
+const contentClasses = "prose prose-lg dark:prose-invert max-w-none text-gray-900 dark:text-white";
+
+// Page-specific SEO/social-share metadata - see src/lib/seo.ts for the fallback heuristics
+// (Splash subtitle/poster, then first Post-derived widget's body copy/image).
+const pageMeta = resolvePageMeta({
+    pageTitle: page?.title,
+    sharingTitle: page?.sharingTitle,
+    pageDescription: page?.description,
+    pageImage: page?.imageCollection?.items?.[0]?.url,
+    sharingImage: page?.sharingImage?.url,
+    items,
+});
+---
+
+<Layout title={pageMeta.title} sharingTitle={pageMeta.sharingTitle} sharingImage={pageMeta.sharingImage} description={pageMeta.description} image={pageMeta.image}>
+    {
+      items.map((item, index) => {
+        const isFirstNonSplash = index === 0 && item.type !== "splash";
+        const topPadding = isFirstNonSplash ? "mt-10 md:pt-24" : "";
+
+        // Validate widget type and data before rendering
+        try {
+          if (!isValidWidgetType(item.type)) {
+            throw new Error(`Invalid widget type: "${item.type}"`);
+          }
+
+          validateWidgetDataForRendering(item.type, item.data);
+
+          switch (item.type) {
+              case "splash":
+                  return <Splash {...item.data as any} isFirstInContainer={index === 0} />
+              case "calendar":
+                  return (
+                      <div class={`lg:container mx-auto px-4 py-8 ${topPadding}`}>
+                          <Calendar events={(item.data as any).items} showNavigation={true}  />
+                      </div>
+                  )
+              case "blockGrid":
+                  return (
+                  <div class={`lg:container mx-auto px-4 py-8 ${topPadding}`}>
+                      {item.isTitleVisible && <h2 class="ui-h3 mb-4">{item.title}</h2>}
+                      <ResponsiveGrid items={(item.data as any).items} maxGridItems={
+                          item.options.get("maxGridItems") ?? "4" } />
+                  </div>
+                  )
+              case "textGrid":
+                  return (
+                  <div class={`lg:container mx-auto px-4 py-8 ${topPadding}`}>
+                      {item.isTitleVisible && <h2 class="ui-h3 mb-4">{item.title}</h2>}
+                      <TextGrid items={(item.data as any).items} />
+                  </div>
+                  )
+              case "categorizedGrid":
+                  return (
+                  <div class={`lg:container mx-auto px-4 py-8 ${topPadding}`}>
+                      {item.isTitleVisible && item.title && <h2 class="ui-h3 mb-6">{item.title}</h2>}
+                      <CategorizedCatalog categories={(item.data as any).categories} maxGridItems={item.options.get("maxGridItems") ?? "4"} calendarHref={prependBase('/calendar', Astro.locals.locale)} />
+                  </div>
+                  )
+              case "doubleColumn":
+                  return (
+                  <div class={`lg:container mx-auto ${topPadding}`}>
+                      <DoubleColumn items={(item.data as any).items} isTitleVisible={item.isTitleVisible} title={ (item.data as any).items.length > 1 ? item.title : undefined } />
+                  </div>
+                  )
+              case "singleColumn": {
+                  const singleColumnIsFirst = index === 0;
+                  return (
+                    <SingleColumn items={(item.data as any).items || []} isTitleVisible={item.isTitleVisible} title={ item.title } isFirstInContainer={singleColumnIsFirst} />
+                  );
+                  }
+              case "miniSplash":
+                  return (
+                  <div class={`lg:container mx-auto px-4 py-8 ${topPadding}`}>
+                      <MiniSplash items={(item.data as any).items || []} isTitleVisible={item.isTitleVisible} title={ (item.data as any)?.items?.length > 1 ? item.title : undefined } />
+                  </div>
+                  )
+              case "report":
+                  return (
+                  <div class={`lg:container mx-auto px-4 py-8 ${topPadding}`}>
+                      <Report report={(item.data as any).report} />
+                  </div>
+                  )
+              case "imageMarquee": {
+                  const respectColorScheme = item.options.get("respectColorScheme") === "true";
+                  const speedOption = parseFloat(item.options.get("speed") ?? "");
+                  const isStatic = item.options.get("static") === "true";
+                  return (
+                  <div class={`py-8 ${topPadding}`}>
+                      <ImageMarquee
+                          items={(item.data as any).items || []}
+                          title={item.title}
+                          isTitleVisible={item.isTitleVisible}
+                          respectColorScheme={respectColorScheme}
+                          speed={Number.isFinite(speedOption) && speedOption > 0 ? speedOption : undefined}
+                          isStatic={isStatic}
+                      />
+                  </div>
+                  );
+                  }
+              case "verticalTimeline":
+                  return (
+                  <div class={`lg:container mx-auto px-4 py-8 ${topPadding}`}>
+                      {item.isTitleVisible && <h2 class="ui-h3 mb-4">{item.title}</h2>}
+                      <VerticalTimeline items={(item.data as any).items} />
+                  </div>
+                  )
+              case "store":
+                  return (
+                  <Store title={item.title} isTitleVisible={item.isTitleVisible} />
+                  )
+              case "googleForm":
+                  return (
+                  <div class={`lg:container mx-auto px-4 py-8 ${topPadding}`}>
+                      {item.isTitleVisible && item.title && <h2 class="ui-h3 mb-4">{item.title}</h2>}
+                      {(item.data as any)?.slug ? (
+                        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                          <GoogleFormLoader slug={(item.data as any).slug} client:load />
+                        </div>
+                      ) : (
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">No form configured.</p>
+                      )}
+                  </div>
+                  )
+              default:
+                  return <div>Unknown type: {item.type}</div>
+          }
+        } catch (error) {
+          // Render error component instead of crashing
+          const errorHtml = getErrorComponent(error as Error, item.type);
+          return <div set:html={errorHtml} />
+        }
+      })
+    }
+</Layout>

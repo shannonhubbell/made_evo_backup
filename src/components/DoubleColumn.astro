@@ -1,0 +1,120 @@
+---
+import { DoubleColumnPropsSchema, type DoubleColumnItem } from "../schema/ui";
+import type z from "zod";
+import ImageResponsive from "./ImageResponsive.astro";
+
+export interface DoubleColumnProps extends z.infer<typeof DoubleColumnPropsSchema> {}
+
+const { isTitleVisible, items, title } = Astro.props;
+
+// Debug: Log items to help diagnose issues
+console.log('DoubleColumn: Received items:', {
+  length: items.length,
+  items: items.map((item: any) => ({
+    hasTitle: !!item?.title,
+    hasContent: !!item?.content,
+    hasImage: !!item?.image,
+    hasCallToAction: !!item?.callToAction
+  }))
+});
+
+let item = items[0];
+
+---
+<div class="lg:container mx-auto px-4 pb-4">
+    { items.length === 0 ? (
+        <div class="text-center text-gray-500 py-8">
+            <p>No items to display</p>
+        </div>
+    ) : items.length === 1 ? (
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:grid-cols-5 ">
+            { isTitleVisible && item?.title !== undefined ? (<h2 class="col-span-full ui-h3 mb-4">{item.title}</h2>) : "" }
+            <div class="col-span-1 md:col-span-2 pt-0">
+                <div class="content-wrapper [&>*:first-child]:!mt-0" set:html={ item?.content || '' } />
+                {
+                    item?.callToAction ? (
+                        <a
+                            href={item.callToAction.url}
+                            target={item.callToAction.url?.startsWith('http') ? '_blank' : undefined}
+                            rel={item.callToAction.url?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                            class="bg-blue-500 text-white px-6 py-3 rounded-full mt-4 uppercase font-bold inline-flex items-center gap-2 w-fit shadow-md hover:bg-blue-600 hover:shadow-lg transition-all"
+                        >
+                            {item.callToAction.title}
+                            <span aria-hidden="true">&rarr;</span>
+                        </a>
+                    ) : <></>
+                }
+            </div>
+
+            { item?.image ? (
+                <ImageResponsive
+                    src={item.image}
+                    alt={item.title || "Content image"}
+                    class="h-80 sm:h-120 w-full object-cover rounded-lg col-span-1 md:col-span-3"
+                />
+            ) : (
+                <div class="h-80 w-full object-cover rounded-lg col-span-1 md:col-span-2"
+                />
+            ) }
+        </div>
+    ) : items.length >= 2 ? (
+        <>
+            { title !== undefined ? (<h2 class="ui-h3 mb-4">{title}</h2>) : "" }
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                <div class="col-span-1">
+                    { items[0]?.image ? (
+                        <ImageResponsive
+                            src={items[0].image}
+                            alt={items[0].title || "Content image"}
+                            class="h-80 w-full object-cover rounded-lg"
+                        />
+                    ) : (
+                        <div class="w-full object-cover rounded-lg" />
+                    ) }
+                    { isTitleVisible && items[0]?.title !== undefined ? (<h2 class="ui-h3 mb-4 mt-4">{items[0].title}</h2>) : "" }
+                    <div class="content-wrapper" set:html={ items[0]?.content || '' } />
+                    {
+                        items[0]?.callToAction ? (
+                            <a
+                                href={items[0].callToAction.url}
+                                target={items[0].callToAction.url?.startsWith('http') ? '_blank' : undefined}
+                                rel={items[0].callToAction.url?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                                class="bg-blue-500 text-white px-6 py-3 rounded-full mt-4 uppercase font-bold inline-flex items-center gap-2 w-fit shadow-md hover:bg-blue-600 hover:shadow-lg transition-all"
+                            >
+                                {items[0].callToAction.title}
+                                <span aria-hidden="true">&rarr;</span>
+                            </a>
+                        ) : <></>
+                    }
+                </div>
+                <div class="col-span-1">
+                    { items[1]?.image ? (
+                        <ImageResponsive
+                            src={items[1].image}
+                            alt={items[1].title || "Content image"}
+                            class="h-80 w-full object-cover rounded-lg"
+                        />
+                    ) : (
+                      <div class="w-full object-cover rounded-lg" />
+                    ) }
+                    { isTitleVisible && items[1]?.title !== undefined ? (<h2 class="ui-h3 mb-4 mt-4">{items[1].title}</h2>) : "" }
+                    <div class="content-wrapper" set:html={ items[1]?.content || '' } />
+                    {
+                        items[1]?.callToAction ? (
+                            <a
+                                href={items[1].callToAction.url}
+                                target={items[1].callToAction.url?.startsWith('http') ? '_blank' : undefined}
+                                rel={items[1].callToAction.url?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                                class="bg-blue-500 text-white px-6 py-3 rounded-full mt-4 uppercase font-bold inline-flex items-center gap-2 w-fit shadow-md hover:bg-blue-600 hover:shadow-lg transition-all"
+                            >
+                                {items[1].callToAction.title}
+                                <span aria-hidden="true">&rarr;</span>
+                            </a>
+                        ) : <></>
+                    }
+                </div>
+            </div>
+        </>
+    ) : null }
+</div>

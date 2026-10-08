@@ -1,0 +1,30 @@
+---
+import type { z } from 'astro:content';
+import type { GraphPropsSchema } from '../schema/ui';
+import BarChart from './hydrated/graphs/BarChart.vue';
+import 'apexcharts/dist/apexcharts.css';
+import LineChart from './hydrated/graphs/LineChart.vue';
+
+export interface GraphProps extends z.infer<typeof GraphPropsSchema> {}
+
+const { 
+  data,
+  title,
+  type = "bar",
+  height = "400px",
+  colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]
+} = Astro.props as GraphProps;
+---
+
+<div class="w-full">
+  <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-800 p-4 md:p-6">
+    {title && (
+      <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50 mb-4">
+        {title}
+      </h3>
+    )}
+    {(type === "bar") && <BarChart client:only="vue" data={data} title={title} height={height} colors={colors} />} 
+    {(type === "trend") && <LineChart client:only="vue" data={data} title={title} height={height} colors={colors} />} 
+  </div>
+</div>
+

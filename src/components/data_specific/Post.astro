@@ -1,0 +1,167 @@
+---
+
+import SingleColumn from "../../components/SingleColumn.astro";
+import Layout from "../../layouts/Layout.astro";
+import { getPostBySlug, getBlogPostsPaginated, getBlogPostsCount } from "../../lib/contentful";
+import { documentToHtmlString } from "@contentful/rich-text-html-renderer";
+import { DoubleColumnItemSchema } from "../../schema/ui";
+import { prependBase } from "../../lib/helpers";
+import "../../styles/global.css";
+import Splash from "../../components/Splash.astro";
+
+
+interface Props {
+    slug?: string;
+    prevSlug?: string | null;
+    nextSlug?: string | null;
+    prevTitle?: string | null;
+    nextTitle?: string | null;
+}
+
+const {
+    slug,
+    prevSlug,
+    nextSlug,
+    prevTitle,
+    nextTitle
+} = Astro.props as Props;
+
+let postData: {
+    items: any[];
+    isTitleVisible: boolean;
+    title: string | undefined;
+} = {
+    items: [],
+    isTitleVisible: false,
+    title: undefined
+};
+
+let postTitle: string | undefined;
+let postDescription: string | undefined;
+
+let navigationData: {
+    prevSlug: string | null;
+    nextSlug: string | null;
+    prevTitle: string | null;
+    nextTitle: string | null;
+} = {
+    prevSlug: prevSlug || null,
+    nextSlug: nextSlug || null,
+    prevTitle: prevTitle || null,
+    nextTitle: nextTitle || null
+};
+
+let image: string | undefined;
+
+if (slug !== undefined) {
+    // Fetch post by slug
+    const post = await getPostBySlug(slug);
+
+    if (post !== null) {
+        // Type assertion: callToAction includes title and url from GraphQL query
+        const callToAction = post.callToAction as { sys: { id: string }; title?: string; url?: string } | undefined;
+        const formattedPost = DoubleColumnItemSchema.parse({
+            title: post.title,
+            content: documentToHtmlString(post.content.json),
+            callToAction: callToAction && callToAction.title && callToAction.url ? {
+                title: callToAction.title,
+                url: callToAction.url
+            } : undefined
+        });
+
+        postData = {
+            items: [formattedPost],
+            isTitleVisible: false,
+            title: undefined
+        };
+
+        image = post.imageCollection?.items?.[0]?.url;
+        postTitle = post.title;
+        postDescription = post.description || undefined;
+    }
+} else {
+    // No slug provided - fetch the first blog post
+    const firstPost = await getBlogPostsPaginated(1, 1);
+
+    if (firstPost.length > 0) {
+        const post = firstPost[0];
+        // Type assertion: callToAction includes title and url from GraphQL query
+        const callToAction = post.callToAction as { sys: { id: string }; title?: string; url?: string } | undefined;
+        const formattedPost = DoubleColumnItemSchema.parse({
+            title: post.title,
+            content: documentToHtmlString(post.content.json),
+            callToAction: callToAction && callToAction.title && callToAction.url ? {
+                title: callToAction.title,
+                url: callToAction.url
+            } : undefined
+        });
+
+        postData = {
+            items: [formattedPost],
+            isTitleVisible: false,
+            title: undefined,
+        };
+
+        image = post.imageCollection?.items?.[0]?.url;
+        postTitle = post.title;
+        postDescription = post.description || undefined;
+
+        // Calculate navigation for the first post
+        const totalPosts = await getBlogPostsCount();
+        if (totalPosts > 1) {
+            const allPosts = await getBlogPostsPaginated(1, totalPosts);
+            const currentIndex = allPosts.findIndex((p: { slug: string }) => p.slug === post.slug);
+
+            if (currentIndex >= 0) {
+                const prevPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
+                const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
+
+                navigationData = {
+                    prevSlug: prevPost?.slug || null,
+                    nextSlug: nextPost?.slug || null,
+                    prevTitle: prevPost?.title || null,
+                    nextTitle: nextPost?.title || null
+                };
+            }
+        }
+    }
+}
+
+---
+
+<Layout title={postTitle} description={postDescription} image={image} type="article">
+    <Splash contents={[{
+        title: "Blog",
+        subtitle: "",
+        videoPoster: image
+    }]} isFirstInContainer={true} />
+    <SingleColumn items={postData.items} isTitleVisible={true} title={postData.title} />
+
+    {(navigationData.prevSlug || navigationData.nextSlug) && (
+        <nav class="flex justify-between items-center gap-4 mt-12 pt-8 border-t border-gray-300 dark:border-gray-700" aria-label="Post navigation">
+            {navigationData.prevSlug ? (
+                <a
+                    href={prependBase(`/blog/posts/${navigationData.prevSlug}`, Astro.locals.locale || 'en-US')}
+                    class="flex flex-col px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-1 max-w-[48%]"
+                >
+                    <span class="text-sm text-gray-600 dark:text-gray-400 mb-1">Previous Post</span>
+                    <span class="font-bold text-gray-900 dark:text-white">{navigationData.prevTitle}</span>
+                </a>
+            ) : (
+                <div class="flex-1 max-w-[48%]"></div>
+            )}
+
+            {navigationData.nextSlug ? (
+                <a
+                    href={prependBase(`/blog/posts/${navigationData.nextSlug}`, Astro.locals.locale || 'en-US')}
+                    class="flex flex-col px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-1 max-w-[48%] text-right ml-auto"
+                >
+                    <span class="text-sm text-gray-600 dark:text-gray-400 mb-1">Next Post</span>
+                    <span class="font-bold text-gray-900 dark:text-white">{navigationData.nextTitle}</span>
+                </a>
+            ) : (
+                <div class="flex-1 max-w-[48%]"></div>
+            )}
+        </nav>
+    )}
+</Layout>

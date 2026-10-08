@@ -1,0 +1,53 @@
+---
+// NOTE: This route and "src/pages/[locale]/index.astro" both matched the same
+// route shape (a single dynamic path segment), which Astro's SSR router
+// cannot disambiguate between. They've been merged into this single file:
+//   - If the segment is a valid locale code (e.g. /en, /es), render that
+//     locale's home page.
+//   - Otherwise, treat it as a legacy (non-locale-prefixed) page slug and
+//     redirect to the locale-prefixed URL.
+import Page from "../components/data_specific/Page.astro";
+import { getDefaultLocale, getAvailableLocales, normalizeLocaleCode } from "../lib/contentful/locales";
+
+// Always server-rendered for on-demand rendering
+export const prerender = false;
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return Astro.redirect('/', 302);
+}
+
+const locales = await getAvailableLocales();
+const localeCodes = locales.map(l => l.code.split('-')[0]); // e.g. 'en', 'es'
+const fullLocaleCodes = locales.map(l => l.code); // e.g. 'en-US', 'es-US'
+
+const isLocaleRoot = localeCodes.includes(slug) || fullLocaleCodes.includes(slug);
+
+if (isLocaleRoot) {
+  // Normalize short codes (e.g. 'en' -> 'en-US')
+  let locale = slug;
+  if (!locale.includes('-')) {
+    locale = await normalizeLocaleCode(locale);
+  }
+
+  if (import.meta.env.DEV) {
+    console.log(`[pages/[slug]] Rendering home page for locale "${locale}"`);
+  }
+
+  // Store locale in locals for Layout
+  Astro.locals.locale = locale;
+} else {
+  // Not a locale code - treat as a legacy page slug and redirect to the
+  // locale-prefixed URL, preserving backward compatibility.
+  const defaultLocale = await getDefaultLocale();
+  const defaultLocaleShort = defaultLocale.split('-')[0];
+
+  if (import.meta.env.DEV) {
+    console.log(`[pages/[slug]] Redirecting "${slug}" to "/${defaultLocaleShort}/${slug}"`);
+  }
+
+  return Astro.redirect(`/${defaultLocaleShort}/${slug}`, 301);
+}
+---
+<Page slug="home" />

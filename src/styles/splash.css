@@ -1,0 +1,167 @@
+/* This file is @import-ed into global.css (the main Tailwind entry), so it
+   shares that compilation unit: `theme()` and the layer order resolve, and
+   rules inside `@layer components` are preserved. Do NOT add `@reference`
+   here or import this file directly in a component — either causes Tailwind
+   to compile it standalone, which strips these layered rules from the output.
+
+   Layered so Tailwind's `utilities` (e.g. the `hidden` class used to toggle
+   slides in gallery mode) can override these rules. */
+@layer components {
+
+  .splash {
+    --splash__info-padding-top: 140px;
+    --splash__info-padding-bottom: 48px;
+    --splash__info-padding-horizontal: 140px;
+
+    --splash__nav-padding-bottom: 48px;
+    --splash__dot-size: 12px;
+    --splash__title-max-width: 70vw;
+    --splash__title-font-size: var(--text-8xl);
+  }
+
+  @media (width <=theme(--breakpoint-lg)) {
+    .splash {
+      --splash__info-padding-horizontal: 96px;
+      --splash__title-font-size: var(--text-7xl);
+    }
+  }
+
+  @media (width <=theme(--breakpoint-md)) {
+    .splash {
+      --splash__info-padding-top: 160px;
+      --splash__info-padding-bottom: 42px;
+      --splash__info-padding-horizontal: 60px;
+      --splash__title-max-width: 100vw;
+      --splash__nav-padding-bottom: 42px;
+      --splash__title-font-size: var(--text-6xl);
+    }
+  }
+
+  @media (width <=theme(--breakpoint-sm)) {
+    .splash {
+      --splash__info-padding-top: 200px;
+      --splash__info-padding-bottom: 36px;
+      --splash__info-padding-horizontal: 32px;
+      --splash__nav-padding-bottom: 36px;
+      --splash__title-font-size: 2rem;
+    }
+  }
+
+  .splash {
+    position: relative;
+
+    margin-bottom: var(--splash__info-padding-bottom);
+
+    /* Reserved space above the first widget on a page (navbar + the site-wide Alert
+       banner, when active - see global.css's --alert-height). Set inline per-instance
+       by Splash.astro only when isFirstInContainer; defaults to 0 otherwise. This
+       genuinely grows .splash's total height (unlike an earlier version of this rule
+       that tried to cancel it back out via a negative margin on .splash__media - that
+       made the padding a no-op on total height, so it never actually created clearance
+       for media splashes at all). The background image is made to grow along with it
+       instead (see .splash__media below), rather than getting pushed down and leaving
+       a gap. Transitioned so dismissing/restoring the alert (Alert.astro) grows/shrinks
+       this space in sync with the alert's own slide animation. */
+    padding-top: var(--splash-top-space, 0px);
+    transition: padding-top 0.35s ease;
+  }
+
+  .splash__item {
+    position: relative;
+
+    &:not(.splash__item--hasMedia) {
+      min-height: 20vh;
+    }
+
+    /* Establishes the height .splash__media (now absolutely positioned, so it no
+       longer contributes to normal-flow sizing) should fill. */
+    &.splash__item--hasMedia {
+      min-height: 70vh;
+    }
+  }
+
+  .splash__item--hasMedia .splash__media {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    transition: top 0.35s ease;
+
+    /* Extends the image/video upward to cover .splash's reserved alert/navbar
+       clearance too (see .splash's padding-top above), so it stays full-bleed behind
+       the alert and grows with the splash instead of leaving a gap above it. */
+    top: calc(-1 * var(--splash-top-space, 0px));
+  }
+
+  .splash__info {
+    /* class="w-11/16 lg:w-9/16 xl:w-1/2 flex-shrink-0 flex flex-col justify-end p-4 min-h-[70vh]" style={`background-color: ${accentColor};`} */
+
+    background: linear-gradient(to bottom,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(0, 0, 0, 0.8) 50%,
+        rgba(0, 0, 0, 0.8) 100%);
+
+    position: absolute;
+    bottom: 0px;
+
+    width: 100vw;
+    padding: var(--splash__info-padding-top) var(--splash__info-padding-horizontal) var(--splash__info-padding-bottom);
+
+    color: white;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    .splash__item:not(.splash__item--hasMedia) & {
+      background: none;
+      color: black;
+    }
+  }
+
+  .splash--hasMultiple .splash__info {
+    padding-bottom: calc(var(--splash__info-padding-bottom) + var(--splash__nav-padding-bottom) + var(--splash__dot-size))
+  }
+
+  .splash__title {
+    max-width: var(--splash__title-max-width);
+    font-size: var(--splash__title-font-size) !important;
+    line-height: 1 !important;
+    text-align: right;
+  }
+
+  .splash__subtitle {
+    /* text-xl uppercase mb-2 tracking-wide text-white text-right */
+    text-transform: none;
+  }
+
+  .splash__nav {
+    position: absolute;
+
+    bottom: 0px;
+    width: 100%;
+    padding-bottom: var(--splash__nav-padding-bottom);
+
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .splash__dot {
+    width: var(--splash__dot-size);
+    height: var(--splash__dot-size);
+    background-color: rgba(255, 255, 255, .5);
+    border-radius: 100%;
+
+    cursor: pointer;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, .75)
+    }
+
+    &.splash__dot--active {
+      background-color: rgba(255, 255, 255, 1)
+    }
+  }
+}

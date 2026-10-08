@@ -1,0 +1,202 @@
+---
+import type { GridCategory } from '../schema/ui';
+import ImageResponsive from './ImageResponsive.astro';
+
+export interface Props {
+  categories: GridCategory[];
+  maxGridItems?: string;
+  /** URL for the "MORE" link (e.g. calendar page). Defaults to /calendar. */
+  calendarHref?: string;
+}
+
+const { categories, calendarHref = '/calendar' } = Astro.props;
+
+/** Default palette for category blocks when accentColor is not set */
+const DEFAULT_ACCENT_COLORS = ['#FFD100', '#9A3BFF', '#99CC00'];
+
+function getCategoryAccentColor(category: GridCategory, index: number): string {
+  if (category.accentColor?.trim()) return category.accentColor.trim();
+  return DEFAULT_ACCENT_COLORS[index % DEFAULT_ACCENT_COLORS.length];
+}
+
+/** Chiclet sizing */
+const CHICLET_WIDTH = '16rem';
+const CHICLET_HEIGHT = '17rem';
+const MOBILE_CHICLET_HEIGHT = '9.5rem';
+/** Gap between grid elements (matches gap-4) */
+const GRID_GAP = '1rem';
+---
+
+<div class="flex flex-col gap-10">
+  {categories.map((category, index) => {
+    const accentColor = getCategoryAccentColor(category, index);
+    const displayedItems = category.items.slice(0, 4);
+    const fillerCount = Math.max(0, 4 - displayedItems.length);
+
+    const renderChiclet = (item: (typeof category.items)[0], width = CHICLET_WIDTH) => {
+      const hasUrl = item.url && item.url.trim() !== '';
+      const hasCta = hasUrl && !!(item.callToAction?.title && item.callToAction?.url);
+      const cardContent = (
+        <>
+          {item.image ? (
+            <ImageResponsive
+              src={item.image}
+              class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div class="absolute inset-0 bg-neutral-300 dark:bg-neutral-600" />
+          )}
+          <div class="absolute inset-0 bg-neutral-900/40" />
+          <div class="absolute top-0 left-0 right-0 bg-neutral-900/70 px-3 py-2 z-10">
+            <span class="text-xs font-semibold text-white uppercase tracking-wide">
+              {item.subtitle}
+            </span>
+          </div>
+          <div class="absolute inset-0 flex flex-col justify-end p-4 z-10 pt-14">
+            <h3 class="text-lg font-bold text-white leading-tight line-clamp-2">
+              {item.title}
+            </h3>
+          </div>
+        </>
+      );
+      const baseClass = 'relative overflow-hidden rounded-xl w-full sm:w-auto';
+      const desktopVars = `--desktop-width: ${width}; --desktop-height: ${CHICLET_HEIGHT}; --mobile-height: ${MOBILE_CHICLET_HEIGHT};`;
+
+      // When there's a call-to-action, the card image/background stays a link to the
+      // event page, and the CTA renders as its own button on top (linking directly to
+      // the CTA URL) so the two destinations don't collide inside a single <a>.
+      if (hasCta) {
+        return (
+          <div class={`${baseClass} catalog-card`} style={desktopVars}>
+            <a
+              href={item.url}
+              target={item.target ?? '_blank'}
+              rel="noopener noreferrer"
+              class="group absolute inset-0 z-0 block"
+              aria-label={item.title}
+            >
+              {item.image ? (
+                <ImageResponsive
+                  src={item.image}
+                  class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              ) : (
+                <div class="absolute inset-0 bg-neutral-300 dark:bg-neutral-600" />
+              )}
+              <div class="absolute inset-0 bg-black opacity-80" />
+            </a>
+            <div class="absolute top-0 left-0 right-0 bg-neutral-900/70 px-3 py-2 z-10 pointer-events-none">
+              <span class="text-xs font-semibold text-white uppercase tracking-wide">
+                {item.subtitle}
+              </span>
+            </div>
+            <div class="absolute inset-0 flex flex-col justify-end gap-2 p-4 z-10 pt-14 pointer-events-none">
+              <h3 class="text-lg font-bold text-white leading-tight line-clamp-2">
+                {item.title}
+              </h3>
+              <a
+                href={item.callToAction!.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="pointer-events-auto self-start inline-flex items-center gap-1 rounded-full bg-white text-neutral-900 text-xs font-bold uppercase tracking-wide px-3 py-1.5 shadow-md hover:bg-neutral-100 hover:shadow-lg transition-all"
+              >
+                {item.callToAction!.title}
+                <span aria-hidden="true">&rarr;</span>
+              </a>
+            </div>
+          </div>
+        );
+      }
+
+      return hasUrl ? (
+        <a
+          href={item.url}
+          target={item.target ?? '_blank'}
+          rel="noopener noreferrer"
+          class={`group block ${baseClass} catalog-card`}
+          style={desktopVars}
+        >
+          {cardContent}
+        </a>
+      ) : (
+        <div class={`${baseClass} catalog-card`} style={desktopVars}>
+          {cardContent}
+        </div>
+      );
+    };
+
+    return (
+      <section
+        class="catalog-section w-full relative"
+        aria-labelledby={`catalog-category-${index}`}
+      >
+        <div class="relative flex-1 min-w-0">
+          <div
+            class="catalog-row flex flex-col gap-4 w-full md:flex-row md:flex-nowrap"
+            style={`--catalog-gap: ${GRID_GAP};`}
+          >
+            <div
+              id={`catalog-category-${index}`}
+              class="catalog-card rounded-xl p-4 overflow-hidden flex flex-col justify-between"
+              style={`background-color: ${accentColor}; --desktop-width: ${CHICLET_WIDTH}; --desktop-height: ${CHICLET_HEIGHT}; --mobile-height: ${MOBILE_CHICLET_HEIGHT};`}
+            >
+              {category.url ? (
+                <a href={category.url} class="group/link block">
+                  <h2 class="text-lg font-bold text-neutral-900 uppercase tracking-tight leading-tight group-hover/link:underline">
+                    {category.name}
+                  </h2>
+                  {category.description && (
+                    <p class="text-sm text-white mt-1 font-medium">
+                      {category.description}
+                    </p>
+                  )}
+                </a>
+              ) : (
+                <div>
+                  <h2 class="text-lg font-bold text-neutral-900 uppercase tracking-tight leading-tight">
+                    {category.name}
+                  </h2>
+                  {category.description && (
+                    <p class="text-sm text-white mt-1 font-medium">
+                      {category.description}
+                    </p>
+                  )}
+                </div>
+              )}
+              <a
+                href={category.url && category.url.trim() !== '' ? category.url : calendarHref}
+                class="mt-3 inline-flex items-center self-end font-bold text-neutral-900 uppercase tracking-wide hover:underline"
+              >
+                More
+              </a>
+            </div>
+            {displayedItems.map((item) => renderChiclet(item))}
+            {Array.from({ length: fillerCount }).map(() => (
+              <div
+                class="catalog-card hidden md:block pointer-events-none opacity-0"
+                aria-hidden="true"
+                style={`--desktop-width: ${CHICLET_WIDTH}; --desktop-height: ${CHICLET_HEIGHT}; --mobile-height: ${MOBILE_CHICLET_HEIGHT};`}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  })}
+</div>
+
+<style>
+  .catalog-card {
+    width: 100%;
+    height: var(--mobile-height);
+  }
+
+  @media (min-width: 768px) {
+    .catalog-row .catalog-card {
+      flex: 1 1 0;
+      width: auto;
+      height: var(--desktop-height);
+      min-width: 0;
+    }
+  }
+</style>

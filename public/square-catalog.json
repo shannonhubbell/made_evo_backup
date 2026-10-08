@@ -1,0 +1,62 @@
+{
+  "success": true,
+  "items": [
+    {
+      "id": "A3PT5CH7JI56NRONMQ6BVAK3",
+      "name": "Individual Membership",
+      "imageUrl": "/images/square/J3NQFPRCYULO3DBUBZ45EAK4.png",
+      "variations": [
+        {
+          "id": "74WCRZMOMWXTDJIX2U7KQBS4",
+          "name": "Regular",
+          "priceMoney": {
+            "amount": 10000,
+            "currency": "USD"
+          }
+        }
+      ]
+    },
+    {
+      "id": "HE37XJ7A5V77AF4UXTZDYZKJ",
+      "name": "Dual Membership",
+      "imageUrl": "/images/square/JPDVW3CTRIZLUCVUJEIADOAY.png",
+      "variations": [
+        {
+          "id": "AXBFUDZPXV5YNTITGKVNYMEE",
+          "name": "Regular",
+          "priceMoney": {
+            "amount": 20000,
+            "currency": "USD"
+          }
+        }
+      ]
+    },
+    {
+      "id": "VORJGFMP5M2NMMENCLCM3YN7",
+      "name": "General Admission",
+      "imageUrl": "/images/square/U3FORNS2HODTU6XLBL4KYHFW.jpeg",
+      "variations": [
+        {
+          "id": "J4RJX6N3O2XP6DFH5QCN63Y2",
+          "name": "Regular",
+          "priceMoney": {
+            "amount": 2000,
+            "currency": "USD"
+          }
+        }
+      ]
+    }
+  ],
+  "generalAdmission": {
+    "id": "VORJGFMP5M2NMMENCLCM3YN7",
+    "name": "General Admission",
+    "variationId": "J4RJX6N3O2XP6DFH5QCN63Y2",
+    "price": {
+      "amount": 2000,
+      "currency": "USD"
+    }
+  },
+  "memberships": [],
+  "generatedAt": "2026-10-08T18:20:23.952Z",
+  "environment": "sandbox"
+}

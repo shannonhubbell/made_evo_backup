@@ -1,0 +1,76 @@
+---
+export interface Props {
+  variant?: 'default' | 'info' | 'success' | 'warning' | 'danger';
+  padding?: 'sm' | 'md' | 'lg';
+  imageSrc?: string;
+  imageAlt?: string;
+  overlay?: boolean;
+  overlayOpacity?: 'light' | 'medium' | 'dark';
+}
+
+const { 
+  variant = 'default', 
+  padding = 'md', 
+  imageSrc, 
+  imageAlt = '', 
+  overlay = false, 
+  overlayOpacity = 'dark' 
+} = Astro.props;
+
+// Consolidated to use only 8 colors (4 light + 4 dark)
+const variantClasses = {
+  default: 'bg-white border-gray-200',
+  info: 'bg-gray-100 border-gray-200',
+  success: 'bg-gray-100 border-gray-200',
+  warning: 'bg-gray-100 border-gray-200',
+  danger: 'bg-gray-100 border-gray-200'
+};
+
+const variantTextClasses = {
+  default: 'text-gray-900',
+  info: 'text-gray-900',
+  success: 'text-gray-900',
+  warning: 'text-gray-900',
+  danger: 'text-gray-900'
+};
+
+const paddingClasses = {
+  sm: 'p-2',
+  md: 'p-4',
+  lg: 'p-6'
+};
+
+const overlayClasses = {
+  light: 'bg-black/[var(--bg-opacity)] [--bg-opacity:20%]',
+  medium: 'bg-black/[var(--bg-opacity)] [--bg-opacity:50%]',
+  dark: 'bg-black/[var(--bg-opacity)] [--bg-opacity:80%]'
+};
+
+// If image is provided, use different styling
+const hasImage = !!imageSrc;
+const containerClasses = hasImage 
+  ? `${paddingClasses[padding]} mb-4 text-sm rounded-lg border-0 h-[20vh] md:h-[25vh] lg:h-[30vh] xl:h-[35vh] overflow-hidden relative`
+  : `${paddingClasses[padding]} mb-4 text-sm rounded-lg border ${variantClasses[variant]} ${variantTextClasses[variant]} h-[20vh] md:h-[25vh] lg:h-[30vh] xl:h-[35vh] overflow-y-auto`;
+
+const contentClasses = hasImage 
+  ? 'text-white relative z-20'
+  : variantTextClasses[variant];
+---
+
+<div class={containerClasses} role="region">
+  {hasImage && (
+    <>
+      <img 
+        src={imageSrc} 
+        alt={imageAlt}
+        class="absolute inset-0 w-full h-full object-cover z-0"
+      />
+      {overlay && (
+        <div class={`absolute inset-0 ${overlayClasses[overlayOpacity]}`}></div>
+      )}
+    </>
+  )}
+  <div class={`h-full ${contentClasses}`}>
+    <slot />
+  </div>
+</div> 

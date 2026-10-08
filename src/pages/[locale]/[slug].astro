@@ -1,0 +1,82 @@
+---
+import Page from "../../components/data_specific/Page.astro";
+import { getPageBySlug, getRedirectBySourceUrl } from "../../lib/contentful";
+import { isValidLocale, getDefaultLocale, normalizeLocaleCode, getAvailableLocales } from "../../lib/contentful/locales";
+
+// Always server-rendered for on-demand rendering
+export const prerender = false;
+
+const { locale: localeParam, slug } = Astro.params;
+
+// Check if slug matches a locale code - if so, redirect to base URL
+if (slug) {
+  const locales = await getAvailableLocales();
+  const localeCodes = locales.map(l => l.code.split('-')[0]); // Get short codes (e.g., 'en', 'es')
+  const fullLocaleCodes = locales.map(l => l.code); // Get full codes (e.g., 'en-US', 'es-US')
+  
+  // Check if slug matches any locale code (short or full)
+  if (localeCodes.includes(slug) || fullLocaleCodes.includes(slug)) {
+    // Slug is a locale code, redirect to base URL
+    return Astro.redirect('/', 301);
+  }
+}
+
+// Validate and normalize locale
+let locale = localeParam || 'en-US';
+
+// Normalize short codes (e.g., 'en' -> 'en-US', 'es' -> 'es-US')
+if (!locale.includes('-')) {
+  locale = await normalizeLocaleCode(locale);
+}
+
+// Validate locale exists in Contentful
+const isValid = await isValidLocale(locale);
+if (!isValid) {
+  // Invalid locale, redirect to default locale version
+  const defaultLocale = await getDefaultLocale();
+  const defaultLocaleShort = defaultLocale.split('-')[0];
+  return Astro.redirect(`/${defaultLocaleShort}/${slug}`, 302);
+}
+
+// Debug logging
+if (import.meta.env.DEV) {
+  console.log(`[pages/[locale]/[slug]] Rendering page "${slug}" with locale "${locale}"`);
+}
+
+// Check if page exists before rendering
+if (slug) {
+  // Debug: Log what locale we're requesting
+  if (import.meta.env.DEV) {
+    console.log(`[pages/[locale]/[slug]] Requesting page "${slug}" with locale "${locale}"`);
+  }
+  
+  const page = await getPageBySlug(slug, locale);
+  if (!page) {
+    // No Page matches this slug - only then, check for a Redirect entry
+    // (Pages always take priority over Redirects on a slug collision).
+    const redirect = await getRedirectBySourceUrl(slug, locale);
+    if (redirect) {
+      return Astro.redirect(redirect.targetUrl, 301);
+    }
+
+    // Page not found - redirect to 404
+    return Astro.redirect('/404', 404);
+  }
+  
+  // Debug: Log the page data to verify locale
+  if (import.meta.env.DEV) {
+    console.log(`[pages/[locale]/[slug]] Received page:`, {
+      id: page.sys.id,
+      title: page.title,
+      slug: page.slug,
+      requestedLocale: locale,
+      // Note: Contentful may return default locale content if requested locale doesn't exist
+    });
+  }
+}
+
+// Store locale in locals for Layout
+Astro.locals.locale = locale;
+
+---
+<Page slug={ slug } />

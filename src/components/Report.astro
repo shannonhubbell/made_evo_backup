@@ -1,0 +1,315 @@
+---
+import type { z } from "astro:content";
+import type { ReportArea, ReportCategory, ReportItem, ReportPropsSchema } from "../schema/ui/report";
+import Graph from "./Graph.astro";
+import StatsBar, { type StatCard } from "./StatsBar.astro";
+
+export interface ReportProps extends z.infer<typeof ReportPropsSchema> {}
+
+const { report } = Astro.props as ReportProps;
+
+// Calculate topline stats for each item within each category
+// countType comes from ReportArea, not ReportCategory
+// For "Count": Sum all values in the 2025 series (topline = total)
+// For "Percent": Get the largest category/month value (topline = max)
+// Also calculates previous year (2024) values for trend comparison
+function calculateToplineStat(report: z.infer<typeof ReportPropsSchema>["report"]): Map<string, { stats: StatCard[]; countType?: 'Count' | 'Percent' }> {
+  const statsByCategory = new Map<string, { stats: StatCard[]; countType?: 'Count' | 'Percent' }>();
+  const targetYear = "2025";
+  const previousYear = "2024";
+  
+  // Iterate through all categories - each category is independent
+  for (const category of report.categories) {
+    const categoryStats: StatCard[] = [];
+    
+    // Collect item values for this category, grouped by area's countType
+    const itemValues: Array<{ title: string; value: number; previousValue: number; countType?: 'Count' | 'Percent'; largestCategory?: string; inverted?: boolean }> = [];
+    
+    for (const area of category.items) {
+      // Get countType from the ReportArea
+      const areaCountType = area.countType;
+      const normalizedCountType = areaCountType?.toString().trim();
+      const isPercent = normalizedCountType?.toLowerCase() === 'percent';
+      const isInverted = area.inverted === true;
+      
+      for (const item of area.items) {
+        // Try to find series by year name first (when series name is the year)
+        let yearSeries = item.data.series.find((series: { name: string; data: number[] }) => 
+          series.name === targetYear
+        );
+        let previousYearSeries = item.data.series.find((series: { name: string; data: number[] }) => 
+          series.name === previousYear
+        );
+        
+        // If not found by year name, check if years are in categories (yearly data structure)
+        let yearIndex: number | undefined;
+        let previousYearIndex: number | undefined;
+        if (!yearSeries) {
+          yearIndex = item.data.categories.indexOf(targetYear);
+          previousYearIndex = item.data.categories.indexOf(previousYear);
+          
+          // If year is found in categories, use the first series and index into its data
+          if (yearIndex !== -1 && item.data.series.length > 0) {
+            yearSeries = {
+              name: item.data.series[0].name,
+              data: [item.data.series[0].data[yearIndex]]
+            };
+          }
+          if (previousYearIndex !== -1 && item.data.series.length > 0) {
+            previousYearSeries = {
+              name: item.data.series[0].name,
+              data: [item.data.series[0].data[previousYearIndex]]
+            };
+          }
+        }
+        
+        if (yearSeries) {
+          if (isPercent) {
+            // For Percent: Get the largest category/month value from 2025
+            const maxValue = Math.max(...yearSeries.data);
+            const maxIndex = yearSeries.data.indexOf(maxValue);
+            const largestCategory = item.data.categories[maxIndex];
+            
+            // Get the value from the same category/month in 2024 for comparison
+            let previousValue = 0;
+            if (previousYearSeries && maxIndex < previousYearSeries.data.length) {
+              previousValue = previousYearSeries.data[maxIndex];
+            }
+            
+            // If inverted, use the remaining percentage (100 - value)
+            const displayValue = isInverted ? 100 - maxValue : maxValue;
+            const displayPreviousValue = isInverted ? 100 - previousValue : previousValue;
+            
+            if (maxValue > 0) {
+              itemValues.push({
+                title: item.title,
+                value: displayValue,
+                previousValue: displayPreviousValue,
+                countType: 'Percent',
+                largestCategory: largestCategory,
+                inverted: isInverted
+              });
+            }
+          } else {
+            // For Count: Check if yearly data is provided directly (single value) or needs summing
+            let totalValue: number;
+            if (yearSeries.data.length === 1) {
+              // Yearly data provided directly - use the value as-is
+              totalValue = yearSeries.data[0];
+            } else {
+              // Multiple values - sum all values in the 2025 series data array
+              totalValue = yearSeries.data.reduce((sum: number, value: number) => sum + value, 0);
+            }
+            
+            // Get previous year value using the same logic
+            let previousValue = 0;
+            if (previousYearSeries) {
+              if (previousYearSeries.data.length === 1) {
+                // Yearly data provided directly - use the value as-is
+                previousValue = previousYearSeries.data[0];
+              } else {
+                // Multiple values - sum all values from 2024 for comparison
+                previousValue = previousYearSeries.data.reduce((sum: number, value: number) => sum + value, 0);
+              }
+            }
+            
+            if (totalValue > 0) {
+              itemValues.push({
+                title: item.title,
+                value: totalValue,
+                previousValue: previousValue,
+                countType: 'Count'
+              });
+            }
+          }
+        }
+      }
+    }
+    
+    // Group items by countType to find highest within each type
+    const percentItems = itemValues.filter(iv => iv.countType === 'Percent');
+    const countItems = itemValues.filter(iv => iv.countType === 'Count' || !iv.countType);
+    
+    // Find highest for Percent items
+    const maxPercentValue = percentItems.length > 0 ? Math.max(...percentItems.map(iv => iv.value), 0) : 0;
+    const highestPercentItem = maxPercentValue > 0 ? percentItems.find(iv => iv.value === maxPercentValue) : null;
+    
+    // Find highest for Count items
+    const maxCountValue = countItems.length > 0 ? Math.max(...countItems.map(iv => iv.value), 0) : 0;
+    const highestCountItem = maxCountValue > 0 ? countItems.find(iv => iv.value === maxCountValue) : null;
+    
+    // Process each item based on its area's countType
+    for (const itemValue of itemValues) {
+      const isPercent = itemValue.countType === 'Percent';
+      
+      // Calculate trend percentage: ((current - previous) / previous) * 100
+      let trend: { direction: 'up' | 'down'; percentage: number } | undefined;
+      if (itemValue.previousValue > 0) {
+        const change = ((itemValue.value - itemValue.previousValue) / itemValue.previousValue) * 100;
+        trend = {
+          direction: change >= 0 ? 'up' : 'down',
+          percentage: Math.abs(change)
+        };
+      } else if (itemValue.value > 0 && itemValue.previousValue === 0) {
+        // New value appeared (100% increase)
+        trend = {
+          direction: 'up',
+          percentage: 100
+        };
+      }
+      
+      if (isPercent) {
+        // Values are already percentages - display as-is with % symbol
+        categoryStats.push({
+          label: itemValue.title,
+          value: `${itemValue.value.toFixed(1)}%`,
+          // Indicate if this item has the highest value among percent items
+          highestCategory: highestPercentItem?.title === itemValue.title ? highestPercentItem.title : undefined,
+          // Store the category name (month) that had the largest value
+          largestCategory: itemValue.largestCategory,
+          // Add trend data
+          trend: trend,
+          // Pass through inverted flag
+          inverted: itemValue.inverted
+        });
+      } else {
+        // Count mode - show raw summed values (no % symbol)
+        categoryStats.push({
+          label: itemValue.title,
+          value: itemValue.value,
+          highestCategory: highestCountItem?.title === itemValue.title ? highestCountItem.title : undefined,
+          // Add trend data
+          trend: trend
+        });
+      }
+    }
+    
+    // Determine the primary countType for this category (use the first area's countType, or default to Count)
+    const primaryCountType = category.items.length > 0 && category.items[0].countType 
+      ? (category.items[0].countType.toString().trim().toLowerCase() === 'percent' ? 'Percent' : 'Count')
+      : undefined;
+    
+    // Only add category if it has stats
+    if (categoryStats.length > 0) {
+      statsByCategory.set(category.name, { stats: categoryStats, countType: primaryCountType });
+    }
+  }
+  
+  return statsByCategory;
+}
+
+const statsByCategory = calculateToplineStat(report);
+---
+
+<div class="lg:container mx-auto px-4 py-8">
+    <div class="mb-10">
+        <div class="content-wrapper">
+          <div class="w-full md:w-3/4 lg:w-1/2" set:html={report.goal}></div>
+        </div>
+    </div>
+    
+    <div class="mb-10">
+      {Array.from(statsByCategory.entries()).map(([categoryName, { stats, countType }]) => {
+        const normalizedCountType = countType?.toString().trim();
+        const isPercent = normalizedCountType?.toLowerCase() === 'percent';
+        
+        // Only show "Highest" indicator for Percent mode (can't compare percentages to counts)
+        const highestStat = isPercent ? stats.find(stat => stat.highestCategory) : null;
+        
+        return (
+          <div class="mb-8">
+            <h2 class="ui-h4 mb-4">{categoryName}</h2>
+            <StatsBar stats={stats} />
+          </div>
+        );
+      })}
+    </div>
+    
+    <div id="details-header" class="mb-4">
+      <button 
+        id="details-toggle"
+        class="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+        aria-expanded="false"
+        aria-controls="details-section"
+      >
+        <h1 class="ui-h3 mb-0">Details</h1>
+        <svg 
+          id="details-chevron"
+          class="w-5 h-5 transition-transform"
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+    </div>
+
+    <div id="details-section" class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
+      {report.description && <div class="content-wrapper mb-4" set:html={report.description}> </div>}
+
+      {report.categories.map((category: ReportCategory) => (
+          <div>
+              <h2 class="ui-h4 mb-4 mt-4">{ category.name }</h2>
+              <div class="mb-4">
+              { category.description && <p>{category.description}</p> }
+              { category.items.map((area: ReportArea) => (
+                  <div class="mb-4">
+                      { area.title && <h3 class="ui-h5 mb-4 mt-4">{area.title}</h3> }
+                      { area.description && <p>{area.description}</p> }
+                      { area.items.map((item: ReportItem) => (
+                          <Graph data={item.data} type={item.type} title={item.title} height="400px" colors={ ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"] } />
+                      ))}
+                  </div>
+              ))}
+              </div>
+          </div>
+      ))}
+    </div>
+
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggleButton = document.getElementById('details-toggle');
+    const detailsSection = document.getElementById('details-section');
+    const chevron = document.getElementById('details-chevron');
+    
+    if (toggleButton && detailsSection && chevron) {
+      toggleButton.addEventListener('click', () => {
+        const isExpanded = toggleButton.getAttribute('aria-expanded') === 'true';
+        
+        const detailsHeader = document.getElementById('details-header');
+        
+        if (isExpanded) {
+          // Collapse: set max-height to 0 and remove sticky positioning
+          detailsSection.classList.remove('max-h-[9999px]');
+          detailsSection.classList.add('max-h-0');
+          toggleButton.setAttribute('aria-expanded', 'false');
+          chevron.classList.remove('rotate-180');
+          
+          if (detailsHeader) {
+            detailsHeader.classList.remove('sticky', 'top-16', 'z-10', 'bg-transparent', 'dark:bg-transparent', 'pt-4', 'pb-2', '-mx-4', 'px-4', 'mb-4', 'border-b', 'border-gray-200', 'dark:border-gray-800', 'backdrop-blur-sm');
+          }
+        } else {
+          // Expand: set a large max-height to allow content to show
+          detailsSection.classList.remove('max-h-0');
+          detailsSection.classList.add('max-h-[9999px]');
+          toggleButton.setAttribute('aria-expanded', 'true');
+          chevron.classList.add('rotate-180');
+          
+          // Make header sticky when expanded - use transparent background with backdrop blur to match body
+          if (detailsHeader) {
+            detailsHeader.classList.add('sticky', 'top-16', 'z-10', 'bg-transparent', 'dark:bg-transparent', 'pt-4', 'pb-2', '-mx-4', 'px-4', 'mb-4', 'border-b', 'border-gray-200', 'dark:border-gray-800', 'backdrop-blur-sm');
+          }
+          
+          // Trigger resize event to update ApexCharts dimensions after transition
+          // This ensures the container has proper dimensions before charts update
+          setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+          }, 350); // Wait for CSS transition to complete
+        }
+      });
+    }
+  });
+</script>

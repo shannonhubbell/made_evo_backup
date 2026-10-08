@@ -1,0 +1,13 @@
+---
+// Redirect / to locale-specific index (e.g. /en)
+import { getDefaultLocale } from "../lib/contentful/locales";
+
+export const prerender = false;
+
+const locale = Astro.locals.locale || await getDefaultLocale();
+const localeShort = locale.split('-')[0];
+const search = Astro.url.search;
+return Astro.redirect(`/${localeShort}${search || ''}`, 302);
+---
+<div>Redirecting...</div>
+

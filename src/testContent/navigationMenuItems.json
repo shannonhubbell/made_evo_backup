@@ -1,0 +1,45 @@
+[
+    { 
+        "label": "Visit", 
+        "href": "/visit",
+        "isTopLevel": true
+    },
+    { 
+        "label": "Programs", 
+        "children": [
+            { "label": "Calendar", "href": "/calendar", "isTopLevel": false},
+            { "label": "All-Playable Exhibits", "href": "/all-playable-exhibits", "isTopLevel": false },
+            { "label": "Field Trips", "href": "/field-trips", "isTopLevel": false },
+            { "label": "MADE Classroom", "href": "/made-classroom", "isTopLevel": false },
+            { "label": "MADE Forum", "href": "/made-forum", "isTopLevel": false },
+            { "label": "Indie Dev Workshop", "href": "/indie-dev-workshop", "isTopLevel": false },
+            { "label": "Creator Night", "href": "/creator-night", "isTopLevel": false },
+            { "label": "Digital Restoration", "href": "/digital-restoration", "isTopLevel": false },
+            { "label": "Tournaments", "href": "/tournaments", "isTopLevel": false},
+            { "label": "Volunteering", "href": "/volunteering", "isTopLevel": false },
+            { "label": "Community Proposal", "href": "/community-proposal", "isTopLevel": false }
+        ],
+        "isTopLevel": true
+    },
+    { 
+        "label": "About", 
+        "children": [
+            { "label": "People", "href": "/people", "isTopLevel": false},
+            { "label": "Press", "href": "/press", "isTopLevel": false},
+            { "label": "History", "href": "/history", "isTopLevel": false},
+            { "label": "Impact Report", "href": "/impact-report", "isTopLevel": false}
+        ],
+        "isTopLevel": true
+    },
+    { 
+        "label": "Give", 
+        "href": "/Give", 
+        "isTopLevel": true
+    },
+    { 
+        "label": "Get Tickets", 
+        "href": "/Give", 
+        "isTopLevel": true,
+        "isButton": true 
+    }
+]

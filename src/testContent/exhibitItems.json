@@ -1,0 +1,599 @@
+[
+    {
+        "name": "Atari Pong",
+        "status": "Playable",
+        "images": ["img/stock/atari_pong.webp"],
+        "audio": "audio/en/atari_pong.mp3",
+        "interpretation": [
+            {
+                "text": "The Atari Pong console, released in 1975, was one of the first home video game systems, bringing the arcade sensation Pong directly into living rooms."
+            },
+            {
+                "text": "The console was dedicated to this simple yet addictive table tennis-style game, where two players used dials to control paddles and volley a ball back and forth on the screen."
+            },
+            {
+                "text": "Despite its simplicity, the Atari Pong console was revolutionary for its time, introducing many to the concept of video gaming and laying the foundation for the home gaming industry."
+            }
+        ]
+    },
+    {
+        "name": "APF Fun",
+        "status": "Playable",
+        "images": ["img/stock/apftvfun.webp"],
+        "audio": "audio/en/apf_fun.mp3",
+        "interpretation": [
+            {
+                "text": "First released in April of 1976, the APF FUN TV Series console was the first of numerous electronic consoles that used the General Instrument AY-3-8500 microchip, colloquially known as “Pong-on-a-chip”."
+            },
+            {
+                "text": "It was innovative for being among the first instances of bringing video games, such as Pong from arcades into consumer living rooms."
+            },
+            {
+                "text": "Before making a game console, APF was known for making small electronic office equipment, like pocket calculators."
+            }
+        ]
+    },
+    {
+        "name": "ATARI 2600",
+        "status": "Playable",
+        "images": ["/img/stock/atari_2600.webp"],
+        "audio": "audio/en/atari_2600.mp3",
+        "interpretation": [
+            {
+                "text": "Already an established publisher of arcade games, Atari released their flagship console in November, 1977."
+            },
+            {
+                "text": "The success of the system paved the way for companies like Coleco and Mattel to develop their own consoles, but throughout the first generation of video games, from 1977 to the mid-1980s, the name Atari was synonymous with video games."
+            },
+            {
+                "text": "Nolan Bushnell is credited with coining “Bushnell’s Law” that states that video games that are considered successful are “easy to learn; difficult to master."
+            }
+        ]
+    },
+    {
+        "name": "ATARI 800",
+        "status": "Playable",
+        "images": ["/img/stock/atari_800.webp"],
+        "audio": "audio/en/atari_800.mp3",
+        "interpretation": [
+            {
+                "text": "A home computer released in 1979 by Atari, it followed the path of the company’s 2600 console by using removable ROM carts for each individual game."
+            },
+            {
+                "text": "Unlike the earlier Atari 400, the keyboard used individual keys and had expansion slots for additional memory cards."
+            },
+            {
+                "text": "With sprite collision detection capabilities, it makes for an excellent gaming system."
+            }
+        ]
+    },
+    {
+        "name": "ATARI 800 XL",
+        "status": "Playable",
+        "images": ["/img/stock/atari_800xl.webp"],
+        "audio": "audio/en/atari_800_xl.mp3",
+        "interpretation": [
+            {
+                "text": "Riding on the earlier success of the Atari 800 model, the 1983 release of the Atari 800XL was given an expanded RAM of 64 Kb, as well as a more compact housing."
+            },
+            {
+                "text": "Otherwise, it is largely a more cost-effective Atari 800."
+            },
+            {
+                "text": "The updated onboard OS did have some trouble in reading older Atari 400 and 800 games, so Atari offered a translator software to patch the OS, to better handle the software of the older games."
+            }
+        ]
+    },
+    {
+        "name": "Commodore 64",
+        "status": "Playable",
+        "images": ["/img/stock/c64.webp"],
+        "audio": "audio/en/commodore_64.mp3",
+        "interpretation": [
+            {
+                "text": "Released in 1982, the Commodore 64 uses a VIC-II graphics card, using 16 colors, scrolling screen and dual bitmap modes."
+            },
+            {
+                "text": "It was named after the onboard 64 kilobytes of RAM in the unit, while production costs were kept low by Commodore International’s vertical integration practices."
+            },
+            {
+                "text": "While a runaway success in the USA, it never gained a firm hold in either the European or Japanese home computer markets."
+            },
+            {
+                "text": "At between 12.5 and 17 million units, the Commodore 64 remains the most widely-sold computer model to this day."
+            }
+        ]
+    },
+    {
+        "name": "Nintendo Entertainment System (NES)",
+        "status": "Playable",
+        "images": ["/img/stock/nes.webp"],
+        "audio": "audio/en/nintendo_entertainment_system_nes.mp3",
+        "interpretation": [
+            {
+                "text": "After almost 2 years after the 1983 Video Game Crash of home console systems, the NES was the “defibrillator” that brought home consoles back to the North American market."
+            },
+            {
+                "text": "While it had already been a success since its release in 1983 in Japan, under the name Family Computer (or Famicom), its 1985 release in the USA led to over 19 million units sold by 1991."
+            },
+            {
+                "text": "In Japan, the original Famicom controllers each had a small microphone in them, which also made the system popular among users as a makeshift karaoke machine."
+            }
+        ]
+    },
+    {
+        "name": "Super Nintendo Entertainment System (SNES)",
+        "status": "Playable",
+        "images": ["/img/stock/snes.webp"],
+        "audio": "audio/en/super_nintendo_entertainment_system_snes.mp3",
+        "interpretation": [
+            {
+                "text": "While released in 1991 (3 years later than their competitor, the Sega Genesis), the Super Nintendo did manage to become the highest sold 16-bit console, with over 49 million sales."
+            },
+            {
+                "text": "With stereo audio for more detailed sound and music, and a video processing unit capable of displaying over 32,000 colors, the SNES remained a highly popular console, even past the 16-bit era."
+            }
+        ]
+    },
+    {
+        "name": "Nintendo 64",
+        "status": "Playable",
+        "images": ["/img/stock/n64.webp"],
+        "audio": "audio/en/nintendo_64.mp3",
+        "interpretation": [
+            {
+                "text": "Released in 1996, the Nintendo 64 (initially called Ultra 64 in development stages) was criticized for still using ROM cartridge games, but the technical specs were impressive; it had a unified RAM subsystem of 4 Mb, which could be expanded to 8 Mb with an expansion pack."
+            },
+            {
+                "text": "While archaic by modern standards, the 3D rendering of the N64 was seen as groundbreaking at the time, with titles such as GoldenEye, Pilotwings 64 and Legend of Zelda: Ocarina of Time being acclaimed even to this day."
+            }
+        ]
+    },
+    {
+        "name": "Nintendo Gamecube",
+        "status": "Playable",
+        "images": ["/img/stock/gamecube.webp"],
+        "audio": "audio/en/nintendo_gamecube.mp3",
+        "interpretation": [
+            {
+                "text": "The Nintendo Gamecube released in 2001 with powerful hardware for the beginning of the 21st century, 4 controllers for local multiplayer, and the first optical disc drive on a Nintendo console, all inside a colorful, compact, cube-shaped design."
+            },
+            {
+                "text": "The Gamecube earned a loyal fanbase for its innovative games such as Super Smash Bros Melee, The Legend of Zelda: The Wind Waker, and Metroid Prime, that remain iconic today."
+            }
+        ]
+    },
+    {
+        "name": "Nintendo Wii",
+        "status": "Playable",
+        "images": ["img/stock/wii.webp"],
+        "audio": "audio/en/nintendo_wii.mp3",
+        "interpretation": [
+            {
+                "text": "Released in 2006, the Wii introduced many new players to gaming with it's simple yet captivating motion controls, which mapped player movement to in-game actions."
+            },
+            {
+                "text": "The Wii also introduced a new generation to retro gaming, having backwards compatibility with it's predecessor, the Gamecube, and the ability to play games for older consoles through emulation on its Virtual Console service."
+            },
+            {
+                "text": "Every console Nintendo has released since the Wii has featured some form of motion controls, and the ability to play retro titles."
+            }
+        ]
+    },
+    {
+        "name": "Nintendo Wii U",
+        "status": "Playable",
+        "images": ["img/stock/wii_u.webp"],
+        "audio": "audio/en/nintendo_wii_u.mp3",
+        "interpretation": [
+            {
+                "text": "The Nintendo Wii U brought dual-screen gaming previously seen on the DS to the living room with its innovative touch screen clade Gamepad controller."
+            },
+            {
+                "text": "The Wii U was more than an evolution of the Wii, being Nintendo's first HD console, and offering its full library as digital downloads through the Nintendo e-shop."
+            },
+            {
+                "text": "The Wii U established itself with titles such as The Legend of Zelda: Breath of the Wild, Mario Kart 8, and Splatoon."
+            }
+        ]
+    },
+    {
+        "name": "Gameboy",
+        "status": "Playable",
+        "images": ["img/stock/gameboy.webp"],
+        "audio": "audio/en/gameboy.mp3",
+        "interpretation": [
+            {
+                "text": "Following the success of the Game & Watch handhelds, the Gameboy is Nintendo's first handheld with interchangeable cartridges."
+            },
+            {
+                "text": "Releasing in 1989, the Gameboy popularized handheld gaming with titles such as Super Mario Land, Link's Awakening, and Pokemon Red and Blue."
+            },
+            {
+                "text": "The Super Gameboy peripheral enables Gameboy titles to be played on the SNES."
+            }
+        ]
+    },
+    {
+        "name": "Game Boy Advance (GBA)",
+        "status": "Playable",
+        "images": ["img/stock/gba.webp"],
+        "audio": "audio/en/game_boy_advance_gba.mp3",
+        "interpretation": [
+            {
+                "text": "The Game Boy Advance, abbreviated as the GBA, was Nintendo's 32-bit successor to their previous handhelds, the Game Boy, and Game Boy Color."
+            },
+            {
+                "text": "The GBA has graphics comparable to a SNES, shoulder buttons, and a link cable for multiplayer gaming."
+            },
+            {
+                "text": "Later revisions like the GBA SP and Game Boy Micro offer backlit screens and rechargeable batteries, while the Game Boy Player allows GBA games to be played on a TV by connecting to a Gamecube."
+            }
+        ]
+    },
+    {
+        "name": "Sega Master System",
+        "status": "Playable",
+        "images": ["/img/stock/mastersystem.webp"],
+        "audio": "audio/en/sega_master_system.mp3",
+        "interpretation": [
+            {
+                "text": "After having published numerous games, SEGA released its own console system in 1986."
+            },
+            {
+                "text": "After seeing the success of the Nintendo Entertainment System in North America, SEGA began to heavily advertise its games, but found little interest among consumers there."
+            },
+            {
+                "text": "However, the Master System did find a large following in South America, where it was produced under license."
+            }
+        ]
+    },
+    {
+        "name": "Sega Genesis",
+        "status": "Playable",
+        "images": ["/img/stock/genesis.webp"],
+        "audio": "audio/en/sega_genesis.mp3",
+        "interpretation": [
+            {
+                "text": "After Nintendo stood unchallenged for 5 years, SEGA released the Genesis (named the Mega Drive in Japan) to try to unseat Nintendo."
+            },
+            {
+                "text": "Bursting on the North American market in 1989, Genesis boasted a 7.6 Mhz processor and video-sync sound card."
+            },
+            {
+                "text": "Sega would later try to enhance the system’s capabilities through add-on peripherals, like the SEGA CD and SEGA 32X."
+            }
+        ]
+    },
+    {
+        "name": "Sega Saturn",
+        "status": "Playable",
+        "images": ["/img/stock/saturn.webp"],
+        "audio": "audio/en/sega_saturn.mp3",
+        "interpretation": [
+            {
+                "text": "The Sega Saturn, launched in 1994, is Sega's ambitious 32-bit console, designed to push the boundaries of gaming with its advanced hardware and focus on 2D sprite-based and early 3D games."
+            },
+            {
+                "text": "The Saturn became known for its diverse library of titles, including fan favorites like NiGHTS into Dreams, Panzer Dragoon Saga, and Virtua Fighter."
+            },
+            {
+                "text": "It gained a strong following in Japan for its innovative and arcade-quality games."
+            },
+            {
+                "text": "Today, the Sega Saturn is remembered as a cult classic, beloved by collectors and retro gaming enthusiasts."
+            }
+        ]
+    },
+    {
+        "name": "Sega Dreamcast",
+        "status": "Playable",
+        "images": ["/img/stock/dreamcast.webp"],
+        "audio": "audio/en/sega_dreamcast.mp3",
+        "interpretation": [
+            {
+                "text": "The release date in North America (9/9/99) wasn’t the only thing that made the Dreamcast a unique and mysterious console."
+            },
+            {
+                "text": "While it was the first game console system to hold an integrated modem and online support, a combination of a vague, “avant-garde” marketing campaign and harsh competition from Sony’s PlayStation 2 led to a rapid decline in Dreamcast sales, and SEGA discontinued production in 2001."
+            },
+            {
+                "text": "Nonetheless, the Dreamcast has gathered a cult following for its early online advances and novel game titles like Power Stone and Sonic Adventure."
+            }
+        ]
+    },
+    {
+        "name": "PlayStation One",
+        "status": "Playable",
+        "images": ["/img/stock/ps1.webp"],
+        "audio": "audio/en/playstation_one.mp3",
+        "interpretation": [
+            {
+                "text": "What began as a collaboration between Nintendo and Sony to form a CD-playing console under the Nintendo name, was later released in 1995 by Sony themselves, after Sony demanded an increase in profit shares, and Nintendo began working with Phillips instead."
+            },
+            {
+                "text": "With widespread support for third-party developers, the PlayStation found a very dedicated audience among developers, as well as players."
+            }
+        ]
+    },
+    {
+        "name": "PlayStation Two",
+        "status": "Playable",
+        "images": ["/img/stock/ps2.webp"],
+        "audio": "audio/en/playstation_two.mp3",
+        "interpretation": [
+            {
+                "text": "While the October, 2000 release saw a slow start for the PlayStation 2, the following year saw a glut of highly successful game titles, leading the PS2 to become the highest-selling console, not only among the sixth-generation of consoles, but across all generations."
+            },
+            {
+                "text": "This was largely due to Sony’s strong support for third-party software developers, often striking exclusivity deals with publishers in order to cut off competitors like SEGA, Nintendo and Microsoft."
+            }
+        ]
+    },
+    {
+        "name": "PlayStation Portable",
+        "status": "Playable",
+        "images": ["/img/stock/psp.webp"],
+        "audio": "audio/en/playstation_portable.mp3",
+        "interpretation": [
+            {
+                "text": "Sony made a grand entrance into the handheld market in 2005 with the PlayStation Portable."
+            },
+            {
+                "text": "The PSP created an experience akin to a handheld PlayStation 2, with 3D graphics, an analogue stick, and games stored on optical discs."
+            },
+            {
+                "text": "The PSP’s Universal Media Discs (UMD) could hold a wapping 1.8 GB of data, which vastly increased the scope and complexity of handheld games."
+            },
+            {
+                "text": "Later models of the PSP featured AV output to a TV, and compatibility with bluetooth controllers, further narrowing the gap between home consoles and handhelds."
+            }
+        ]
+    },
+    {
+        "name": "PlayStation Three",
+        "status": "Playable",
+        "images": ["/img/stock/ps3.webp"],
+        "audio": "audio/en/playstation_three.mp3",
+        "interpretation": [
+            {
+                "text": "The PlayStation 3 released in 2006 and was the first high-definition game console from Sony."
+            },
+            {
+                "text": "The PS3 featured a powerful custom 64-bit CPU architecture called \"cell\", and a blu-ray drive for larger and more complex games."
+            },
+            {
+                "text": "The PS3 also helped pioneer online multiplayer gaming through the PlayStation Network and introduced the PlayStation Store, making digital downloads a major part of modern gaming."
+            }
+        ]
+    },
+    {
+        "name": "Xbox",
+        "status": "Playable",
+        "images": ["/img/stock/xbox.webp"],
+        "audio": "audio/en/xbox.mp3",
+        "interpretation": [
+            {
+                "text": "Having long been a heavyweight maker of PCs and game software, Microsoft decided to join the console scene with the 2001 release of its Xbox system."
+            },
+            {
+                "text": "Innovative for featuring the first game console to have an integrated hard disk drive, it also had an ethernet port to connect to the internet via broadband for online play."
+            },
+            {
+                "text": "Titles such as HALO would grow to become large franchises, and Microsoft’s Xbox Live service would quickly make them a primary game company into the 2000s and beyond."
+            }
+        ]
+    },
+    {
+        "name": "Xbox 360",
+        "status": "Playable",
+        "images": ["/img/stock/xbox360.webp"],
+        "audio": "audio/en/xbox_360.mp3",
+        "interpretation": [
+            {
+                "text": "Shortly after the Xbox Live online service reached 1 million subscribers, Microsoft released their latest console, the Xbox 360."
+            },
+            {
+                "text": "It featured wireless controllers, a hard drive expansion slot and HDMI high definition capability."
+            },
+            {
+                "text": "While system production stopped in 2016, Microsoft still supports Xbox 360 systems via the online service."
+            }
+        ]
+    },
+    {
+        "name": "Dance Central",
+        "status": "Playable",
+        "images": ["/img/stock/kinect.webp"],
+        "audio": "audio/en/dance_central.mp3",
+        "interpretation": [
+            {
+                "text": "Capitalizing on the innovative trend of motion controlled gaming, Dance Central is a motion controlled rhythm game developed in 2010 by Guitar Hero and Rockband creators Harmonix for Microsoft's Xbox 360."
+            },
+            {
+                "text": "The game is controlled using Kinect, a motion control peripheral for the Xbox 360 to track player's movements with cameras."
+            },
+            {
+                "text": "Dance Central teaches players dance moves to popular songs by having them actually preform them."
+            }
+        ]
+    },
+    {
+        "name": "Cyber Troopers Virtual-On: Oratorio Tangram",
+        "status": "Playable",
+        "images": ["/img/stock/virtualon.webp"],
+        "audio": "audio/en/cyber_troopers_virtual_on_oratorio_tangram.mp3",
+        "interpretation": [
+            {
+                "text": "A highly popular fighting and shooting game in the Japanese arcade scene, Virtual On: CyberTroopers debuted in 1996, with a port to the Sega Saturn coming out in 1997."
+            },
+            {
+                "text": "It has dual stick joystick controllers that control the mech suit using “tank control” operations."
+            }
+        ]
+    },
+    {
+        "name": "Apple IIe",
+        "status": "Playable",
+        "images": ["/img/stock/apple_ii.webp"],
+        "audio": "audio/en/apple_iie.mp3",
+        "interpretation": [
+            {
+                "text": "The Apple II is a personal computer released in 1977 and created by Apple co-founder Steve Wozniak."
+            },
+            {
+                "text": "It's not only the first mass produced product from Apple, but also widely recognized as one of the first successful home computers and an important platform for early gaming."
+            },
+            {
+                "text": "Games such as Oregon Trail, John Madden Football, and The Bard's Tale helped establish the Apple II as an excellent platform for gaming throughout the 1970s and 1980s."
+            }
+        ]
+    },
+    {
+        "name": "iMac G3",
+        "status": "Playable",
+        "images": ["/img/stock/imac.webp"],
+        "audio": "audio/en/imac_g3.mp3",
+        "interpretation": [
+            {
+                "text": "After 11 years of being away from the Apple Company, Steve Jobs returned to streamline and restructure the company."
+            },
+            {
+                "text": "The first released product after his return, the G3 iMac offered an all-in-one personal computer that would offer widespread consumer access to the internet."
+            },
+            {
+                "text": "While the visual design of the unit was praised, there were critics who decried the loss of expansion ports and low onboard memory."
+            }
+        ]
+    },
+    {
+        "name": "Galaga",
+        "status": "Playable",
+        "images": ["img/stock/galaga.webp"],
+        "audio": "audio/en/galaga.mp3",
+        "interpretation": [
+            {
+                "text": "Blast off with Galaga! Defend the galaxy against alien invaders in this 1981 arcade classic."
+            },
+            {
+                "text": "Test your reflexes and aiming skills as you save the universe one pixelated ship at a time."
+            }
+        ]
+    },
+    {
+        "name": "Centipede",
+        "status": "Playable",
+        "images": ["/img/stock/centipede.webp"],
+        "audio": "audio/en/centipede.mp3",
+        "interpretation": [
+            {
+                "text": "Centipede is an arcade game created by Atari employees Dona Bailey and Ed Logg."
+            },
+            {
+                "text": "The game uses a track ball for movement and is an early example of a top-down shooter."
+            },
+            {
+                "text": "After initial success in arcades, the game has been ported to several home consoles such as the Atari 2600."
+            }
+        ]
+    },
+    {
+        "name": "Super Mario Bros",
+        "status": "Playable",
+        "images": ["img/stock/supermariobros.webp"],
+        "audio": "audio/en/super_mario_bros.mp3",
+        "interpretation": [
+            {
+                "text": "Jump into nostalgia with our Super Mario machine!"
+            },
+            {
+                "text": "Experience the timeless thrill of the iconic plumber's adventures as you rescue Princess Toadstool (Now known as Peach!) and navigate classic levels."
+            },
+            {
+                "text": "It's gaming history brought to life."
+            }
+        ]
+    },
+    {
+        "name": "Multicade",
+        "status": "Playable",
+        "images": ["https://images.ctfassets.net/78fenvx5vfbx/55vOQSD9HcsJtW9oCDMlXr/c386b6cff01ba4cddd8bd200b573f16a/striking_control.webp?q=75&w=1200&fm=webp"],
+        "audio": "audio/en/striking_control.mp3",
+        "interpretation": [
+            {
+                "text": "The MADE's special arcade cabinet is an emulation based multicade that exhibits arcade titles from the 1980s to the early 2000s, including Street Fighter, Donkey Kong, and Pac-Man."
+            },
+            {
+                "text": "The exhibit also features \"hard-to-display\" items from our collection generally not available to the public without special permission."
+            },
+            {
+                "text": "\"Striking Control\" artwork on the cabinet was originally for a promotional game for the Air Jordan brand created by Bay Area creative agency AKQA."
+            }
+        ]
+    },
+    {
+        "name": "Steel Battalion",
+        "status": "Playable",
+        "images": ["img/stock/steelbattalion.webp"],
+        "audio": "audio/en/steel_battalion.mp3",
+        "interpretation": [
+            {
+                "text": "Immerse yourself in the MADE's one of a kind Steel Battalion cockpit which makes the player feel like they're piloting a giant mech."
+            },
+            {
+                "text": "Steel Battalion was originally released in 2002 by Capcom on the Xbox, and came with a 44 input controller including buttons, switches, throttles, dials, joysticks and foot pedals."
+            }
+        ]
+    },
+    {
+        "name": "Fairchild Channel F",
+        "status": "Historical Exhibit",
+        "images": ["img/stock/fairchild_channel_f.webp"],
+        "audio": "audio/en/fairchild_channel_f.mp3",
+        "interpretation": [
+            {
+                "text": "Developed by electrical engineer Gerald “Jerry” Lawson, the Fairchild Channel F was released in 1976."
+            },
+            {
+                "text": "It was originally named the Video Entertainment System, but was changed the following year, to avoid confusion with Atari’s Video Computer System."
+            },
+            {
+                "text": "In addition to being the first console to feature independent joystick controllers, it also pioneered the use of removable ROM cartridges to exchange playable games."
+            }
+        ]
+    },
+    {
+        "name": "Commodore Amiga",
+        "status": "Unknown",
+        "images": ["img/stock/commodore_amiga.webp"],
+        "audio": "audio/en/commodore_amiga.mp3",
+        "interpretation": [
+            {
+                "text": "Released in July of 1985, the Amiga was originally designed to be a game machine, but came to become a favorite among graphic designers."
+            },
+            {
+                "text": "This was due to the 7.14 MHz CPU that could handle fluid animations and display different screens with different resolutions."
+            },
+            {
+                "text": "It had no internal expansions to the on-board 256 Kb RAM, but could use external peripherals to expand to 8Mb."
+            }
+        ]
+    },
+    {
+        "name": "The Passing Art of the Video Game Magazine",
+        "status": "Playable",
+        "images": ["img/stock/gameMag.webp"],
+        "audio": "audio/en/video_game_magazine.mp3",
+        "interpretation": [
+            {
+                "text": "Video game journalism is an important part of the spread of video game news, but though online publications are popular, physical magazines have disappeared in the industry."
+            },
+            {
+                "text": "Take the chance to visit and learn the history of gaming magazines!"
+            },
+            {
+                "text": "You'll be able to handle and read some rare issues yourself!"
+            }
+        ]
+    }
+]

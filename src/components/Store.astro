@@ -1,0 +1,261 @@
+---
+// Store component for Square payment integration
+// Displays catalog items with cart functionality
+
+import { prependBase } from '../lib/helpers';
+
+export interface StoreProps {
+  title?: string;
+  isTitleVisible?: boolean;
+}
+
+const { title, isTitleVisible = false } = Astro.props;
+
+// Get Square application ID from environment
+const squareApplicationId = import.meta.env.SQUARE_APPLICATION_ID || '';
+const squareLocationId = import.meta.env.SQUARE_LOCATION_ID || '';
+const squareEnvironment = import.meta.env.SQUARE_ENVIRONMENT || 'sandbox';
+
+// Load catalog data
+let catalogData: any = null;
+try {
+  // Use fetch for both SSR and client-side to ensure Cloudflare compatibility
+  // Cloudflare Workers don't support filesystem access, so we always use fetch
+  const baseUrl = import.meta.env.BASE_URL || '/';
+  
+  // Construct absolute URL - fetch() requires absolute URLs in Node/Cloudflare SSR
+  const origin = typeof window !== 'undefined'
+    ? window.location.origin
+    : (Astro.url?.origin ?? import.meta.env.SITE ?? 'http://localhost:4321');
+  const catalogUrl = new URL('square-catalog.json', origin + baseUrl).href;
+  
+  const catalogResponse = await fetch(catalogUrl);
+  if (catalogResponse.ok) {
+    catalogData = await catalogResponse.json();
+  }
+} catch (error) {
+  console.error('Failed to load catalog data:', error);
+}
+
+const locale = (Astro.locals as { locale?: string })?.locale || 'en-US';
+const checkoutPath = prependBase('/store/checkout', locale);
+
+const museumHours = [
+  { day: 'WED', hours: '10 am - 5 pm' },
+  { day: 'THU', hours: '10 am - 5 pm' },
+  { day: 'FRI', hours: '11 am - 9 pm' },
+  { day: 'SAT', hours: '11 am - 9 pm' },
+  { day: 'SUN', hours: '11 am - 7 pm' },
+];
+
+// Get all items (admission + memberships)
+const allItems = catalogData?.items || [];
+const admissionItem = catalogData?.generalAdmission 
+  ? allItems.find((item: any) => item.id === catalogData.generalAdmission.id)
+  : null;
+// Get memberships - check both memberships array and filter items
+const membershipItems = catalogData?.memberships?.length > 0 
+  ? catalogData.memberships 
+  : allItems.filter((item: any) => 
+      item.name?.toLowerCase().includes('membership') && 
+      item.id !== catalogData?.generalAdmission?.id
+    );
+---
+
+<div class="pb-8">
+  <div class="lg:container mx-auto px-4">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Left Column: Museum Hours -->
+      <div class="lg:col-span-1 hidden lg:block">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">MUSEUM HOURS</h2>
+        <div class="space-y-2">
+          {museumHours.map((schedule) => (
+            <div class="text-gray-700 dark:text-gray-300">
+              <span class="font-semibold">{schedule.day}:</span> {schedule.hours}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Right Column: Tickets and Memberships -->
+      <div class="lg:col-span-2">
+        <div class="space-y-6 h-full">
+          <!-- Admission Card -->
+          {admissionItem && (
+            <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 flex items-start gap-6 relative overflow-hidden min-h-60 border border-gray-300 dark:border-gray-700 shadow-[0_0_20px_rgba(0,0,0,0.1)] dark:shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+              <div class="flex-1 min-w-0 pr-24 md:pr-0">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 break-words">ADMISSION</h3>
+                <div class="flex items-center gap-2 mb-4">
+                  <button 
+                    class="w-8 h-8 rounded-full border-2 border-gray-400 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-500 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center justify-center transition-colors"
+                    data-item-id={admissionItem.id}
+                    data-action="decrease"
+                  >
+                    <span class="text-lg">−</span>
+                  </button>
+                  <span class="text-gray-900 dark:text-white font-semibold w-8 text-center" data-quantity={admissionItem.id}>1</span>
+                  <button 
+                    class="w-8 h-8 rounded-full border-2 border-gray-400 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-500 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center justify-center transition-colors"
+                    data-item-id={admissionItem.id}
+                    data-action="increase"
+                  >
+                    <span class="text-lg">+</span>
+                  </button>
+                </div>
+              </div>
+              {admissionItem.imageUrl && (
+                <>
+                  <div class="absolute right-0 md:right-64 top-0 bottom-0 flex flex-col items-end justify-between mt-6 mb-6 pr-6">
+                    <div class="text-3xl font-bold text-orange-500">
+                      ${((admissionItem.variations[0]?.priceMoney?.amount || 0) / 100).toFixed(0)}
+                    </div>
+                    <button 
+                      class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold px-4 py-2 text-sm rounded-lg transition-colors"
+                      data-action="buy-now"
+                      data-item-id={admissionItem.id}
+                      data-variation-id={admissionItem.variations[0]?.id}
+                      data-name={admissionItem.name}
+                      data-price={(admissionItem.variations[0]?.priceMoney?.amount || 0).toString()}
+                      data-currency={(admissionItem.variations[0]?.priceMoney?.currency || 'USD')}
+                      data-price-per-unit={((admissionItem.variations[0]?.priceMoney?.amount || 0) / 100).toFixed(0)}
+                      id={`buy-now-${admissionItem.id}`}
+                    >
+                      Buy Now ${((admissionItem.variations[0]?.priceMoney?.amount || 0) / 100).toFixed(0)}
+                    </button>
+                  </div>
+                  <div class="absolute right-0 top-0 bottom-0 w-64 flex-shrink-0 hidden md:block">
+                    <img 
+                      src={prependBase(admissionItem.imageUrl)} 
+                      alt={admissionItem.name}
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          <!-- Membership Cards -->
+          {membershipItems.map((membership: any, index: number) => {
+            const priceColor = index === 0 ? 'text-purple-500' : 'text-green-500';
+            const price = (membership.variations[0]?.priceMoney?.amount || 0) / 100;
+            
+            return (
+              <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 flex items-start gap-6 relative overflow-hidden min-h-60 border border-gray-300 dark:border-gray-700 shadow-[0_0_20px_rgba(0,0,0,0.1)] dark:shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+                <div class="flex-1 min-w-0 pr-24 md:pr-0">
+                  <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 break-words">{membership.name.toUpperCase()}</h3>
+                  <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 mb-4 space-y-1">
+                    <li>Some great stuff</li>
+                    <li>More great stuff</li>
+                    <li>Even more</li>
+                    <li>You should buy this</li>
+                  </ul>
+                </div>
+                {membership.imageUrl && (
+                  <>
+                    <div class="absolute right-0 md:right-64 top-0 bottom-0 flex flex-col items-end justify-between mt-6 mb-6 pr-6">
+                      <div class={`text-3xl font-bold ${priceColor}`}>
+                        ${price.toFixed(0)}
+                      </div>
+                      <button 
+                        class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold px-4 py-2 text-sm rounded-lg transition-colors"
+                        data-action="become-member"
+                        data-item-id={membership.id}
+                        data-variation-id={membership.variations[0]?.id}
+                        data-name={membership.name}
+                        data-price={(membership.variations[0]?.priceMoney?.amount || 0).toString()}
+                        data-currency={(membership.variations[0]?.priceMoney?.currency || 'USD')}
+                      >
+                        Become a Member
+                      </button>
+                    </div>
+                    <div class="absolute right-0 top-0 bottom-0 w-64 flex-shrink-0 hidden md:block">
+                      <img 
+                        src={prependBase(membership.imageUrl)} 
+                        alt={membership.name}
+                        class="w-full h-full object-cover"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ checkoutPath }}>
+  // Cart state management
+  const cart = new Map();
+  
+  // Initialize quantities
+  document.querySelectorAll('[data-quantity]').forEach((el) => {
+    const itemId = el.getAttribute('data-quantity');
+    if (itemId) {
+      cart.set(itemId, 1);
+    }
+  });
+  
+  // Handle quantity changes
+  document.querySelectorAll('[data-action="increase"], [data-action="decrease"]').forEach((button) => {
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      const itemId = button.getAttribute('data-item-id');
+      const action = button.getAttribute('data-action');
+      
+      if (!itemId) return;
+      
+      const currentQty = cart.get(itemId) || 0;
+      const newQty = action === 'increase' ? currentQty + 1 : Math.max(0, currentQty - 1);
+      
+      cart.set(itemId, newQty);
+      
+      // Update display
+      const qtyDisplay = document.querySelector(`[data-quantity="${itemId}"]`);
+      if (qtyDisplay) {
+        qtyDisplay.textContent = newQty.toString();
+      }
+      
+      // Update "Buy Now" button price for admission items
+      const buyNowButton = document.querySelector(`#buy-now-${itemId}`);
+      if (buyNowButton) {
+        const pricePerTicket = parseFloat(buyNowButton.getAttribute('data-price-per-unit') || '0');
+        const totalPrice = (pricePerTicket * newQty).toFixed(0);
+        buyNowButton.textContent = `Buy Now $${totalPrice}`;
+      }
+    });
+  });
+  
+  // Handle buy buttons - navigate to embedded checkout (read from data attributes)
+  document.querySelectorAll('[data-action="buy-now"], [data-action="become-member"]').forEach((button) => {
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      const itemId = button.getAttribute('data-item-id');
+      const variationId = button.getAttribute('data-variation-id');
+      const name = button.getAttribute('data-name');
+      const priceStr = button.getAttribute('data-price');
+      const currency = button.getAttribute('data-currency') || 'USD';
+
+      if (!itemId || !variationId || !name || !priceStr) {
+        console.error('Missing required data attributes on buy button');
+        return;
+      }
+
+      const quantity = cart.get(itemId) || 1;
+      const pricePerUnit = parseInt(priceStr, 10);
+
+      const params = new URLSearchParams({
+        itemId,
+        variationId,
+        quantity: quantity.toString(),
+        name,
+        price: String(pricePerUnit),
+        currency,
+      });
+      window.location.href = checkoutPath + '?' + params.toString();
+    });
+  });
+</script>

@@ -1,0 +1,110 @@
+---
+import type { GridItem } from '../schema/ui';
+import ImageResponsive from './ImageResponsive.astro';
+
+export interface Props {
+  items: GridItem[];
+  maxGridItems: string;
+}
+
+const { items, maxGridItems } = Astro.props;
+
+// CSS class variables - Consolidated color system
+const gridContainerClasses = `w-full h-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-${maxGridItems} gap-4 md:gap-4`;
+// Cards are no longer clickable as a whole block - only the CTA button (if any) is a link -
+// so there's no hover/shadow affordance at the card level, just a plain content container
+// that grows to fit its content instead of clipping it.
+const cardClasses = "relative w-full flex flex-col rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-100 dark:bg-gray-700";
+const imageWrapperClasses = "relative w-full aspect-[16/9] overflow-hidden";
+const imageClasses = "absolute inset-0 w-full h-full object-cover";
+// flex-1 so this container fills the remaining height of the card (grid rows stretch every
+// card to match the tallest one), and detailsClasses below grows within it so the CTA
+// button always sticks to the bottom of the card instead of trailing right after the text.
+const contentContainerClasses = "flex flex-col flex-1 gap-4 p-4 md:p-5";
+const detailsClasses = "flex flex-col gap-2 flex-1";
+// Type hierarchy below matches the CategorizedCatalog chiclet: a small semibold uppercase
+// eyebrow (subtitle), a bold-but-compact title, and medium-weight body copy for description.
+const descriptionClasses = "text-gray-700 dark:text-gray-300 text-sm font-medium";
+const eventDetailsClasses = "text-xs text-gray-900 dark:text-white";
+const dateRangeClasses = "font-semibold uppercase tracking-wide flex items-center gap-2";
+const iconClasses = "w-4 h-4";
+const titleClasses = "text-lg font-bold text-gray-900 dark:text-white leading-tight";
+const contentClasses = "text-gray-900 dark:text-white";
+// Matches the CTA button convention used by CategorizedCatalog's chiclets
+const ctaButtonClasses = "self-end inline-flex items-center gap-1 rounded-full bg-white text-neutral-900 text-xs font-bold uppercase tracking-wide px-3 py-1.5 shadow-md hover:bg-neutral-100 hover:shadow-lg transition-all border border-gray-200";
+---
+<div class={gridContainerClasses}>
+  {items.map((item) => {
+    const hasUrl = item.url && item.url.trim() !== '';
+    // Prefer an explicit callToAction (title + url); fall back to the item's own url with a
+    // generic label so items that only ever set `url` (Programs, Exhibits, Members, etc.)
+    // still get a way to click through. Either way, the CTA is always its own small button -
+    // never the whole card.
+    const cta = item.callToAction?.title && item.callToAction?.url
+      ? item.callToAction
+      : hasUrl
+        ? { title: 'Learn More', url: item.url! }
+        : undefined;
+
+    return (
+      <div class={cardClasses}>
+        { item.image ? (
+          <div class={imageWrapperClasses}>
+            <ImageResponsive src={ item.image } class={imageClasses} />
+          </div>
+        ) : (
+          <></>
+        )}
+
+        <div class={contentContainerClasses}>
+          <div class={detailsClasses}>
+            <!-- Event Details -->
+            <div class={eventDetailsClasses}>
+              <!-- Date Range -->
+              <div class={dateRangeClasses}>
+                {/* <svg class={iconClasses} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg> */}
+                <span>{ item.subtitle }</span>
+              </div>
+            </div>
+
+            <!-- Event Name -->
+            <h3 class={titleClasses}>
+              { item.title}
+            </h3>
+            { item.description !== undefined ? (
+              <div class={descriptionClasses}>
+                { item.description }
+              </div>
+            ) : (
+              <></>
+            )}
+            {
+              item.content !== undefined ? (
+                <div class={contentClasses} set:html={ item.content ?? "" }>
+                </div>
+              ) : (
+                <></>
+              )
+            }
+          </div>
+
+          { cta ? (
+            <a
+              href={cta.url}
+              target={ item.target ?? "_blank" }
+              rel="noopener noreferrer"
+              class={ctaButtonClasses}
+            >
+              {cta.title}
+              <span aria-hidden="true">&rarr;</span>
+            </a>
+          ) : (
+            <></>
+          )}
+        </div>
+      </div>
+    );
+  })}
+</div>

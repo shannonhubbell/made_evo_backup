@@ -1,0 +1,115 @@
+---
+import SingleColumn from "../../components/SingleColumn.astro";
+import Layout from "../../layouts/Layout.astro";
+import { getBlogPostsPaginated, getBlogPostsCount } from "../../lib/contentful";
+import { documentToHtmlString } from "@contentful/rich-text-html-renderer";
+import { DoubleColumnItemSchema } from "../../schema/ui";
+import { prependBase } from "../../lib/helpers";
+import "../../styles/global.css";
+
+interface Props {
+    page: number;
+    postsPerPage: number;
+}
+
+const { page, postsPerPage } = Astro.props;
+const locale = Astro.locals.locale || 'en-US';
+
+let postData: {
+    items: any[];
+    isTitleVisible: boolean;
+    title: string | undefined;
+} = {
+    items: [],
+    isTitleVisible: false,
+    title: undefined
+};
+
+let pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalPosts: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+} = {
+    currentPage: page,
+    totalPages: 1,
+    totalPosts: 0,
+    hasNext: false,
+    hasPrev: false
+};
+
+// Fetch posts for the current page
+const posts = await getBlogPostsPaginated(page, postsPerPage);
+const totalPosts = await getBlogPostsCount();
+const totalPages = Math.ceil(totalPosts / postsPerPage);
+
+// Format posts for SingleColumn component
+const formattedPosts = posts.map((post: {
+    title: string;
+    description: string;
+    content: { json: any };
+    slug: string;
+    callToAction?: { title: string; url: string };
+}) => {
+    return DoubleColumnItemSchema.parse({
+        title: post.title,
+        content: documentToHtmlString(post.content.json),
+        callToAction: post.callToAction ? {
+            title: post.callToAction.title,
+            url: prependBase(post.callToAction.url, locale)
+        } : {
+            title: "Read More",
+            url: prependBase(`/blog/posts/${post.slug}`, locale)
+        }
+    });
+});
+
+postData = {
+    items: formattedPosts,
+    isTitleVisible: true,
+    title: undefined
+};
+
+pagination = {
+    currentPage: page,
+    totalPages: totalPages,
+    totalPosts: totalPosts,
+    hasNext: page < totalPages,
+    hasPrev: page > 1
+};
+
+---
+
+<Layout title="Blog" description="Read the latest news, stories, and updates from the Museum of Art and Digital Entertainment.">
+    <div class="lg:container mx-auto px-4 py-8">
+        <h1 class="ui-h2 mb-8">Blog Posts</h1>
+        <SingleColumn items={postData.items} isTitleVisible={postData.isTitleVisible} title={postData.title} truncateLength={300} />
+
+        {pagination.totalPages > 1 && (
+            <nav class="flex justify-center items-center gap-4 mt-12" aria-label="Pagination">
+                {pagination.hasPrev && (
+                    <a
+                        href={prependBase(`/blog/indices/${pagination.currentPage - 1}`, locale)}
+                        class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                    >
+                        Previous
+                    </a>
+                )}
+
+                <span class="text-gray-700 dark:text-gray-300">
+                    Page {pagination.currentPage} of {pagination.totalPages}
+                </span>
+
+                {pagination.hasNext && (
+                    <a
+                        href={prependBase(`/blog/indices/${pagination.currentPage + 1}`, locale)}
+                        class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                    >
+                        Next
+                    </a>
+                )}
+            </nav>
+        )}
+    </div>
+</Layout>
